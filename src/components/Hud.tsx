@@ -17,7 +17,7 @@ export function Hud({ state }: HudProps) {
       </div>
       <div>
         <span>Speed</span>
-        <strong>{Math.round(state.vehicle.speed * 3.6)} km/h</strong>
+        <strong aria-label="Speed readout">{Math.round(state.vehicle.speed * 3.6)} km/h</strong>
       </div>
       <div>
         <span>Cake</span>

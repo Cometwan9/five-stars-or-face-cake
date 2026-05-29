@@ -12,7 +12,7 @@ test('keyboard input changes speed readout', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.getByTestId('game-canvas')).toBeVisible();
-  const speedReadout = page.getByLabel('Delivery status').locator('strong').nth(1);
+  const speedReadout = page.getByLabel('Speed readout');
 
   await page.keyboard.down('w');
   try {
