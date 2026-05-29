@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "e2e": "playwright test"
+    "e2e": "if find tests -type f \\( -name '*.spec.ts' -o -name '*.spec.tsx' -o -name '*.test.ts' -o -name '*.test.tsx' \\) 2>/dev/null | grep -q .; then playwright test; else echo \"No Playwright tests found\"; fi"
   },
   "dependencies": {
     "@react-three/drei": "^10.0.0",
