@@ -11,9 +11,13 @@ test('renders playable prototype HUD and canvas', async ({ page }) => {
 test('keyboard input changes speed readout', async ({ page }) => {
   await page.goto('/');
 
-  await page.keyboard.down('w');
-  await page.waitForTimeout(900);
-  await page.keyboard.up('w');
+  await expect(page.getByTestId('game-canvas')).toBeVisible();
+  const speedReadout = page.getByLabel('Delivery status').locator('strong').nth(1);
 
-  await expect(page.getByLabel('Delivery status')).not.toContainText('0 km/h');
+  await page.keyboard.down('w');
+  try {
+    await expect(speedReadout).toHaveText(/^[1-9]\d* km\/h$/);
+  } finally {
+    await page.keyboard.up('w');
+  }
 });
