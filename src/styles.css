@@ -59,3 +59,122 @@ h1 {
 p {
   margin: 0;
 }
+
+.hud {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(94px, 1fr));
+  gap: 8px;
+  width: min(520px, calc(100vw - 36px));
+  color: #17202b;
+}
+
+.hud > div:not(.tilt-meter) {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 2px solid #17202b;
+  border-radius: 8px;
+  background: rgba(255, 252, 242, 0.9);
+  box-shadow: 0 3px 0 #17202b;
+}
+
+.hud span {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.hud strong {
+  display: block;
+  overflow: hidden;
+  font-size: clamp(0.9rem, 2vw, 1.2rem);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tilt-meter {
+  grid-column: 1 / -1;
+  height: 12px;
+  overflow: hidden;
+  border: 2px solid #17202b;
+  border-radius: 999px;
+  background: #fff8e8;
+}
+
+.tilt-meter i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #5dbb7d, #f0c44f, #d94f45);
+}
+
+.control-hint {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  padding: 8px 10px;
+  border: 2px solid #17202b;
+  border-radius: 8px;
+  background: rgba(255, 252, 242, 0.9);
+  color: #17202b;
+  font-size: 0.9rem;
+  font-weight: 800;
+  box-shadow: 0 3px 0 #17202b;
+}
+
+.result-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 14px;
+  padding: 24px;
+  background: rgba(23, 32, 43, 0.72);
+  color: #fff8e8;
+  text-align: center;
+}
+
+.result-overlay h1 {
+  color: #ffd75f;
+  font-size: clamp(3rem, 14vw, 8rem);
+  line-height: 1;
+}
+
+.result-overlay button {
+  justify-self: center;
+  min-width: 150px;
+  padding: 10px 14px;
+  border: 2px solid #17202b;
+  border-radius: 8px;
+  background: #ffd75f;
+  color: #17202b;
+  font-weight: 900;
+  box-shadow: 0 4px 0 #17202b;
+  cursor: pointer;
+}
+
+@media (max-width: 420px) {
+  .hud {
+    left: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: calc(100vw - 20px);
+  }
+
+  .hud > div:not(.tilt-meter) {
+    padding: 8px;
+  }
+
+  .hud strong {
+    font-size: 0.82rem;
+  }
+
+  .control-hint {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    text-align: center;
+  }
+}

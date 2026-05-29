@@ -1,4 +1,4 @@
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Sky } from '@react-three/drei';
 import type { GameState } from '../game/gameState';
 import { RiderView } from './RiderView';
@@ -11,7 +11,7 @@ type GameCanvasProps = {
 export function GameCanvas({ state }: GameCanvasProps) {
   return (
     <Canvas
-      camera={{ position: [0, 2.1, -5], rotation: [0, Math.PI, 0], fov: 72 }}
+      camera={{ position: [0, 2.1, -5], fov: 72 }}
       shadows
       gl={{ antialias: true }}
       data-testid="game-canvas"
@@ -22,6 +22,22 @@ export function GameCanvas({ state }: GameCanvasProps) {
       <Sky sunPosition={[20, 20, 10]} turbidity={2} rayleigh={0.7} />
       <World />
       <RiderView state={state} />
+      <FollowCamera state={state} />
     </Canvas>
   );
+}
+
+function FollowCamera({ state }: GameCanvasProps) {
+  const { camera } = useThree();
+
+  useFrame(() => {
+    const { position, heading } = state.vehicle;
+    const forwardX = Math.sin(heading);
+    const forwardZ = Math.cos(heading);
+
+    camera.position.set(position.x - forwardX * 5, 2.1, position.z - forwardZ * 5);
+    camera.lookAt(position.x + forwardX * 8, 1.1, position.z + forwardZ * 8);
+  });
+
+  return null;
 }
