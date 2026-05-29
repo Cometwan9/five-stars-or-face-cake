@@ -22,6 +22,7 @@ export type GameState = {
   vehicle: VehicleState;
   cake: CakeState;
   lastBumpId?: string;
+  lastObstacleId?: string;
   rating?: RatingResult;
 };
 
@@ -43,20 +44,21 @@ export function updateGameState(
 ): GameState {
   if (state.phase !== 'running') return state;
 
-  const elapsedSeconds = Math.max(deltaSeconds, 0);
+  const inputSafe = sanitizeInput(input);
+  const elapsedSeconds = Number.isFinite(deltaSeconds) && deltaSeconds > 0 ? deltaSeconds : 0;
   const simulationDelta = Math.min(elapsedSeconds, MAX_SIMULATION_DELTA_SECONDS);
-  const vehicle = updateVehicle(state.vehicle, input, simulationDelta);
+  const vehicle = updateVehicle(state.vehicle, inputSafe, simulationDelta);
   const bump = getRouteFeatureHit(vehicle.position, 'bump');
   const obstacle = getRouteFeatureHit(vehicle.position, 'obstacle');
   const destination = getRouteFeatureHit(vehicle.position, 'destination');
   const bumpImpulse = bump && bump.id !== state.lastBumpId ? 1 : 0;
-  const collisionImpulse = obstacle ? 0.65 : 0;
+  const collisionImpulse = obstacle && obstacle.id !== state.lastObstacleId ? 0.65 : 0;
 
   const cake = updateCakePhysics(
     state.cake,
     {
       acceleration: getVehicleAcceleration(vehicle, simulationDelta),
-      steering: input.steer,
+      steering: inputSafe.steer,
       bump: bumpImpulse,
       collision: collisionImpulse,
       speed: vehicle.speed
@@ -75,6 +77,7 @@ export function updateGameState(
       vehicle,
       cake,
       lastBumpId: bump?.id,
+      lastObstacleId: obstacle?.id,
       rating: calculateRating({ remainingSeconds, condition })
     };
   }
@@ -87,6 +90,7 @@ export function updateGameState(
       vehicle,
       cake,
       lastBumpId: bump?.id,
+      lastObstacleId: obstacle?.id,
       rating: calculateRating({ remainingSeconds, condition })
     };
   }
@@ -96,6 +100,20 @@ export function updateGameState(
     remainingSeconds,
     vehicle,
     cake,
-    lastBumpId: bump?.id
+    lastBumpId: bump?.id,
+    lastObstacleId: obstacle?.id
   };
+}
+
+function sanitizeInput(input: VehicleInput): VehicleInput {
+  return {
+    throttle: finiteClamp(input.throttle, 0, 1),
+    brake: finiteClamp(input.brake, 0, 1),
+    steer: finiteClamp(input.steer, -1, 1)
+  };
+}
+
+function finiteClamp(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(max, Math.max(min, value));
 }
