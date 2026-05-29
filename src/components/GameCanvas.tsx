@@ -11,7 +11,7 @@ type GameCanvasProps = {
 export function GameCanvas({ state }: GameCanvasProps) {
   return (
     <Canvas
-      camera={{ position: [0, 2.1, -5], fov: 72 }}
+      camera={{ position: [0, 2.1, -5], rotation: [0, Math.PI, 0], fov: 72 }}
       shadows
       gl={{ antialias: true }}
       data-testid="game-canvas"
