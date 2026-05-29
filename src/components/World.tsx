@@ -3,7 +3,7 @@ import { ROUTE_FEATURES, ROUTE_LENGTH } from '../game/route';
 export function World() {
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <mesh position={[0, 0, ROUTE_LENGTH / 2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[70, ROUTE_LENGTH + 60]} />
         <meshStandardMaterial color="#6fb36d" />
       </mesh>
