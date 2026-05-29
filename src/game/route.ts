@@ -1,18 +1,18 @@
-export type RouteFeature = {
+export type RouteFeature = Readonly<{
   id: string;
   kind: 'bump' | 'obstacle' | 'destination';
-  position: { x: number; z: number };
+  position: Readonly<{ x: number; z: number }>;
   radius: number;
-};
+}>;
 
 export const ROUTE_LENGTH = 185;
 
-export const ROUTE_FEATURES: RouteFeature[] = [
+export const ROUTE_FEATURES: readonly RouteFeature[] = [
   { id: 'speed-bump-1', kind: 'bump', position: { x: 0, z: 42 }, radius: 4.5 },
   { id: 'roadblock-1', kind: 'obstacle', position: { x: -4.5, z: 86 }, radius: 3.2 },
   { id: 'pothole-1', kind: 'bump', position: { x: 5, z: 124 }, radius: 3.8 },
   { id: 'customer-door', kind: 'destination', position: { x: 0, z: ROUTE_LENGTH }, radius: 9 }
-];
+] as const;
 
 export function getRouteFeatureHit(
   position: { x: number; z: number },

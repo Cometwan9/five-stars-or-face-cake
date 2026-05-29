@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { createVehicleState, updateVehicle } from './vehicle';
+import {
+  createVehicleState,
+  getVehicleAcceleration,
+  type VehicleState,
+  updateVehicle
+} from './vehicle';
 
 describe('vehicle movement', () => {
   it('accelerates forward with throttle', () => {
@@ -25,5 +30,78 @@ describe('vehicle movement', () => {
     );
 
     expect(Math.abs(moving.heading)).toBeGreaterThan(Math.abs(stopped.heading));
+  });
+
+  it('coasting drag stops at zero without sign flip', () => {
+    const forward = updateVehicle(
+      { ...createVehicleState(), speed: 0.5, previousSpeed: 1 },
+      { throttle: 0, brake: 0, steer: 0 },
+      1
+    );
+    const reverse = updateVehicle(
+      { ...createVehicleState(), speed: -0.5, previousSpeed: -1 },
+      { throttle: 0, brake: 0, steer: 0 },
+      1
+    );
+
+    expect(forward.speed).toBe(0);
+    expect(reverse.speed).toBe(0);
+  });
+
+  it('returns unchanged state for nonpositive deltaSeconds', () => {
+    const state = updateVehicle(createVehicleState(), { throttle: 1, brake: 0, steer: 0 }, 1);
+
+    expect(updateVehicle(state, { throttle: 1, brake: 1, steer: 1 }, 0)).toBe(state);
+    expect(updateVehicle(state, { throttle: 1, brake: 1, steer: 1 }, -1)).toBe(state);
+  });
+
+  it('clamps speed at max forward and reverse limits', () => {
+    const fastForward = updateVehicle(
+      { ...createVehicleState(), speed: 17.5 },
+      { throttle: 1, brake: 0, steer: 0 },
+      1
+    );
+    const fastReverse = updateVehicle(
+      { ...createVehicleState(), speed: -2.5 },
+      { throttle: 0, brake: 1, steer: 0 },
+      1
+    );
+
+    expect(fastForward.speed).toBe(18);
+    expect(fastReverse.speed).toBe(-3);
+  });
+
+  it('clamps input values to bounded movement behavior', () => {
+    const vehicle = updateVehicle(createVehicleState(), { throttle: 20, brake: -20, steer: 20 }, 1);
+
+    expect(vehicle.speed).toBe(8.5);
+    expect(vehicle.heading).toBe(1.55);
+    expect(Number.isFinite(vehicle.position.x)).toBe(true);
+    expect(Number.isFinite(vehicle.position.z)).toBe(true);
+  });
+});
+
+describe('vehicle acceleration', () => {
+  it('returns expected speed delta over time', () => {
+    const state: VehicleState = {
+      position: { x: 0, z: 0 },
+      heading: 0,
+      speed: 9,
+      previousSpeed: 5
+    };
+
+    expect(getVehicleAcceleration(state, 2)).toBe(2);
+  });
+
+  it('returns zero for nonpositive deltaSeconds', () => {
+    const state: VehicleState = {
+      position: { x: 0, z: 0 },
+      heading: 0,
+      speed: 9,
+      previousSpeed: 5
+    };
+
+    expect(getVehicleAcceleration(state, 0)).toBe(0);
+    expect(getVehicleAcceleration(state, -1)).toBe(0);
   });
 });

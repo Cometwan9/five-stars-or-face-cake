@@ -31,12 +31,18 @@ export function updateVehicle(
   input: VehicleInput,
   deltaSeconds: number
 ): VehicleState {
+  if (deltaSeconds <= 0) return state;
+
   const throttle = clamp(input.throttle, 0, 1);
   const brake = clamp(input.brake, 0, 1);
   const steer = clamp(input.steer, -1, 1);
 
   const acceleration = throttle * ACCELERATION - brake * BRAKING - Math.sign(state.speed) * DRAG;
-  const speed = clamp(state.speed + acceleration * deltaSeconds, -3, MAX_SPEED);
+  const nextSpeed = state.speed + acceleration * deltaSeconds;
+  const speed =
+    throttle === 0 && brake === 0 && Math.sign(nextSpeed) !== Math.sign(state.speed)
+      ? 0
+      : clamp(nextSpeed, -3, MAX_SPEED);
   const speedTurnFactor = Math.min(1, Math.abs(speed) / 7);
   const heading = state.heading + steer * TURN_RATE * speedTurnFactor * deltaSeconds;
 
