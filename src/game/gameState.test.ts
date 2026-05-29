@@ -191,4 +191,52 @@ describe('game state', () => {
 
     expect(reentered.cake.stability).toBeLessThan(left.cake.stability);
   });
+
+  it('does not consume bump dedupe during zero or non-finite delta overlap', () => {
+    for (const deltaSeconds of [0, Number.NaN, Infinity]) {
+      const overlapping = {
+        ...createGameState(),
+        vehicle: {
+          position: { x: 0, z: 42 },
+          heading: 0,
+          speed: 0,
+          previousSpeed: 0
+        }
+      };
+
+      const noElapsed = updateGameState(
+        overlapping,
+        { throttle: 0, brake: 0, steer: 0 },
+        deltaSeconds
+      );
+      const later = updateGameState(noElapsed, { throttle: 0, brake: 0, steer: 0 }, 0.05);
+
+      expect(noElapsed.lastBumpId).toBeUndefined();
+      expect(later.cake.stability).toBeLessThan(noElapsed.cake.stability);
+    }
+  });
+
+  it('does not consume obstacle dedupe during zero or non-finite delta overlap', () => {
+    for (const deltaSeconds of [0, Number.NaN, Infinity]) {
+      const overlapping = {
+        ...createGameState(),
+        vehicle: {
+          position: { x: -4.5, z: 86 },
+          heading: 0,
+          speed: 0,
+          previousSpeed: 0
+        }
+      };
+
+      const noElapsed = updateGameState(
+        overlapping,
+        { throttle: 0, brake: 0, steer: 0 },
+        deltaSeconds
+      );
+      const later = updateGameState(noElapsed, { throttle: 0, brake: 0, steer: 0 }, 0.05);
+
+      expect(noElapsed.lastObstacleId).toBeUndefined();
+      expect(later.cake.stability).toBeLessThan(noElapsed.cake.stability);
+    }
+  });
 });

@@ -47,6 +47,8 @@ export function updateGameState(
   const inputSafe = sanitizeInput(input);
   const elapsedSeconds = Number.isFinite(deltaSeconds) && deltaSeconds > 0 ? deltaSeconds : 0;
   const simulationDelta = Math.min(elapsedSeconds, MAX_SIMULATION_DELTA_SECONDS);
+  if (simulationDelta === 0) return state;
+
   const vehicle = updateVehicle(state.vehicle, inputSafe, simulationDelta);
   const bump = getRouteFeatureHit(vehicle.position, 'bump');
   const obstacle = getRouteFeatureHit(vehicle.position, 'obstacle');
