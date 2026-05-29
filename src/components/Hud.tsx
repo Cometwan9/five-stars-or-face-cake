@@ -10,7 +10,7 @@ export function Hud({ state }: HudProps) {
   const tilt = Math.hypot(state.cake.tiltX, state.cake.tiltZ);
 
   return (
-    <div className="hud" aria-label="Delivery status">
+    <div className="hud" role="status" aria-label="Delivery status">
       <div>
         <span>Time</span>
         <strong>{Math.ceil(state.remainingSeconds)}s</strong>
