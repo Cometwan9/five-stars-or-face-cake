@@ -1,11 +1,13 @@
+import { useMemo } from 'react';
+import { GameCanvas } from './components/GameCanvas';
+import { createGameState } from './game/gameState';
+
 export default function App() {
+  const state = useMemo(() => createGameState(), []);
+
   return (
     <main className="app-shell">
-      <section className="loading-panel">
-        <p className="eyebrow">Five Stars or Face Cake</p>
-        <h1>Delivery prototype loading</h1>
-        <p>First-person cake delivery physics slice.</p>
-      </section>
+      <GameCanvas state={state} />
     </main>
   );
 }

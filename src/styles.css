@@ -18,12 +18,20 @@ body {
   min-height: 100vh;
 }
 
+canvas {
+  display: block;
+}
+
 button {
   font: inherit;
 }
 
 .app-shell {
-  min-height: 100vh;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #9ed7dc;
 }
 
 .loading-panel {
