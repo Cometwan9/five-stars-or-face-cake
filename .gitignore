@@ -3,3 +3,5 @@ dist/
 tsconfig.tsbuildinfo
 test-results/
 playwright-report/
+.DS_Store
+coverage/
