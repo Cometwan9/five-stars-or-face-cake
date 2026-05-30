@@ -1,3 +1,7 @@
+import { useLoader } from '@react-three/fiber';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
+import { useMemo } from 'react';
+import { Vector3 } from 'three';
 import type { GameState } from '../game/gameState';
 import { getCakeCondition } from '../game/cakePhysics';
 
@@ -43,6 +47,7 @@ export function RiderView({ state }: RiderViewProps) {
           <torusGeometry args={[0.42, 0.09, 6, 12]} />
           <meshStandardMaterial color="#141927" flatShading />
         </mesh>
+        <DeliveryScooterModel />
         <mesh position={[0, -0.78, -1.04]} rotation={[Math.PI / 2, 0, 0]} castShadow>
           <cylinderGeometry args={[0.24, 0.24, 0.12, 6]} />
           <meshStandardMaterial color="#6b7280" flatShading />
@@ -155,5 +160,37 @@ export function RiderView({ state }: RiderViewProps) {
         </group>
       </group>
     </group>
+  );
+}
+
+function DeliveryScooterModel() {
+  const stlGeometry = useLoader(STLLoader, '/models/delivery-scooter.stl');
+  const geometry = useMemo(() => {
+    const normalized = stlGeometry.clone();
+    normalized.computeVertexNormals();
+    normalized.computeBoundingBox();
+
+    const bounds = normalized.boundingBox;
+    if (!bounds) return normalized;
+
+    const size = new Vector3();
+    const center = new Vector3();
+    bounds.getSize(size);
+    bounds.getCenter(center);
+    const scale = 1 / Math.max(size.x, size.y, size.z, 1);
+
+    normalized.translate(-center.x, -center.y, -center.z);
+    normalized.scale(scale, scale, scale);
+    normalized.rotateX(-Math.PI / 2);
+    normalized.computeBoundingBox();
+
+    return normalized;
+  }, [stlGeometry]);
+  const yOffset = -0.86 - (geometry.boundingBox?.min.y ?? 0) * 1.9;
+
+  return (
+    <mesh geometry={geometry} position={[0, yOffset, -0.62]} scale={[1.9, 1.9, 1.9]} rotation={[0, Math.PI, 0]} castShadow>
+      <meshStandardMaterial color="#0fc0a8" roughness={0.82} metalness={0.08} flatShading />
+    </mesh>
   );
 }

@@ -5,9 +5,10 @@ import { World } from './World';
 
 type GameCanvasProps = {
   state: GameState;
+  onCustomerInteract: () => void;
 };
 
-export function GameCanvas({ state }: GameCanvasProps) {
+export function GameCanvas({ state, onCustomerInteract }: GameCanvasProps) {
   return (
     <Canvas
       camera={{ position: [0, 1.55, -3.65], rotation: [-0.16, Math.PI, 0], fov: 78 }}
@@ -20,14 +21,14 @@ export function GameCanvas({ state }: GameCanvasProps) {
       <ambientLight intensity={0.78} color="#8cffb7" />
       <directionalLight position={[5, 10, -7]} intensity={1.45} color="#ffcf7a" castShadow />
       <pointLight position={[0, 2.2, 2.5]} intensity={0.85} color="#3dffe0" />
-      <World state={state} />
+      <World state={state} onCustomerInteract={onCustomerInteract} />
       <RiderView state={state} />
       <FollowCamera state={state} />
     </Canvas>
   );
 }
 
-function FollowCamera({ state }: GameCanvasProps) {
+function FollowCamera({ state }: Pick<GameCanvasProps, 'state'>) {
   const { camera } = useThree();
 
   useFrame(({ clock }) => {

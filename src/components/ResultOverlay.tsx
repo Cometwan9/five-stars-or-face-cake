@@ -16,6 +16,11 @@ export function ResultOverlay({ state, onRestart }: ResultOverlayProps) {
   if (!state.rating) return null;
 
   const stars = '★★★★★'.slice(0, state.rating.stars).padEnd(5, '☆');
+  const outcome = state.rating.faceCake
+    ? 'Face Cake'
+    : state.rating.stars <= 2
+      ? 'Complaint Form'
+      : 'Customer Review';
 
   return (
     <section
@@ -24,7 +29,7 @@ export function ResultOverlay({ state, onRestart }: ResultOverlayProps) {
       aria-modal="true"
       aria-label="Delivery result"
     >
-      <p className="eyebrow">{state.rating.faceCake ? 'Face Cake' : 'Delivery Complete'}</p>
+      <p className="eyebrow">{outcome}</p>
       <h1>{stars}</h1>
       <p>Time remaining: {Math.ceil(state.remainingSeconds)}s</p>
       <p>{state.rating.comment}</p>

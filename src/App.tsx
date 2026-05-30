@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { GameCanvas } from './components/GameCanvas';
 import { Hud } from './components/Hud';
 import { ResultOverlay } from './components/ResultOverlay';
-import { createGameState, updateGameState, type GameState } from './game/gameState';
+import { completeDelivery, createGameState, updateGameState, type GameState } from './game/gameState';
 import type { VehicleInput } from './game/vehicle';
 
 const FRAME_SECONDS = 1 / 60;
@@ -61,9 +61,11 @@ export default function App() {
 
   return (
     <main className="app-shell">
-      <GameCanvas state={state} />
+      <GameCanvas state={state} onCustomerInteract={() => setState((current) => completeDelivery(current))} />
       <Hud state={state} />
-      <div className="control-hint">W/S drive · A/D steer · R restart</div>
+      <div className="control-hint">
+        {state.phase === 'handoff' ? 'Click customer to deliver · R restart' : 'W/S drive · A/D steer · R restart'}
+      </div>
       <ResultOverlay state={state} onRestart={() => setState(createGameState())} />
     </main>
   );

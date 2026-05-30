@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createGameState, updateGameState } from './gameState';
+import { completeDelivery, createGameState, updateGameState } from './gameState';
 
 describe('game state', () => {
   it('counts down while running', () => {
@@ -29,14 +29,17 @@ describe('game state', () => {
     expect(Math.abs(state.cake.tiltX)).toBeGreaterThan(0);
   });
 
-  it('finishes when reaching the destination', () => {
+  it('waits for customer handoff when reaching the destination', () => {
     let state = createGameState();
     for (let i = 0; i < 900 && state.phase === 'running'; i += 1) {
       state = updateGameState(state, { throttle: 1, brake: 0, steer: 0 }, 1 / 60);
     }
 
-    expect(state.phase).toBe('finished');
-    expect(state.rating).toBeDefined();
+    expect(state.phase).toBe('handoff');
+    expect(state.rating).toBeUndefined();
+    const delivered = completeDelivery(state);
+    expect(delivered.phase).toBe('finished');
+    expect(delivered.rating).toBeDefined();
   });
 
   it('fails when cake reaches face-cake condition', () => {
@@ -82,6 +85,16 @@ describe('game state', () => {
 
     expect(updateGameState(finished, { throttle: 1, brake: 1, steer: 1 }, 1)).toBe(finished);
     expect(updateGameState(failed, { throttle: 1, brake: 1, steer: 1 }, 1)).toBe(failed);
+  });
+
+  it('keeps handoff state still until the customer is clicked', () => {
+    const handoff = {
+      ...createGameState(),
+      phase: 'handoff' as const
+    };
+
+    expect(updateGameState(handoff, { throttle: 1, brake: 0, steer: 1 }, 1)).toBe(handoff);
+    expect(completeDelivery(handoff).rating).toBeDefined();
   });
 
   it('clamps raw overlarge vehicle input before vehicle and cake integration', () => {
@@ -160,6 +173,27 @@ describe('game state', () => {
     expect(first.remainingSeconds).toBeGreaterThan(overlapping.remainingSeconds);
     expect(first.score).toBeGreaterThan(overlapping.score);
     expect(second.score).toBe(first.score);
+  });
+
+  it('red lights penalize unsafe crossings once per intersection overlap', () => {
+    const crossing = {
+      ...createGameState(),
+      remainingSeconds: 69,
+      score: 200,
+      vehicle: {
+        position: { x: 0, z: 70 },
+        heading: 0,
+        speed: 8,
+        previousSpeed: 8
+      }
+    };
+
+    const first = updateGameState(crossing, { throttle: 0, brake: 0, steer: 0 }, 0.05);
+    const second = updateGameState(first, { throttle: 0, brake: 0, steer: 0 }, 0.05);
+
+    expect(first.remainingSeconds).toBeLessThan(crossing.remainingSeconds);
+    expect(first.score).toBeLessThan(crossing.score);
+    expect(second.score).toBeGreaterThanOrEqual(first.score);
   });
 
   it('applies obstacle collision again after leaving and re-entering', () => {

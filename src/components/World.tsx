@@ -3,6 +3,7 @@ import type { GameState } from '../game/gameState';
 
 type WorldProps = {
   state: GameState;
+  onCustomerInteract: () => void;
 };
 
 const FAIRIES = [
@@ -19,7 +20,7 @@ const BUILDINGS = Array.from({ length: 12 }, (_, index) => ({
   color: ['#b85f43', '#d2964a', '#2e8f80', '#554a95'][index % 4]
 }));
 
-export function World({ state }: WorldProps) {
+export function World({ state, onCustomerInteract }: WorldProps) {
   const windLean = state.wind.direction * 0.35;
 
   return (
@@ -33,6 +34,23 @@ export function World({ state }: WorldProps) {
         <planeGeometry args={[13.4, ROUTE_LENGTH + 28]} />
         <meshStandardMaterial color="#2f3442" flatShading />
       </mesh>
+
+      {[70, 146].map((z) => (
+        <group key={`crossroad-${z}`} position={[0, 0.035, z]}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <planeGeometry args={[50, 15]} />
+            <meshStandardMaterial color="#303645" flatShading />
+          </mesh>
+          {[-10, -5, 5, 10].map((x) => (
+            <mesh key={x} position={[x, 0.08, 0]} castShadow>
+              <boxGeometry args={[3.2, 0.035, 0.22]} />
+              <meshStandardMaterial color="#f7e39a" flatShading />
+            </mesh>
+          ))}
+          <TrafficLight position={[-7.2, 0, -6]} active={state.remainingSeconds % 12 > 4} />
+          <TrafficLight position={[7.2, 0, 6]} active={state.remainingSeconds % 12 <= 4} />
+        </group>
+      ))}
 
       {[-7.5, 7.5].map((x) => (
         <mesh key={`curb-${x}`} position={[x, 0.08, ROUTE_LENGTH / 2]} castShadow>
@@ -81,6 +99,10 @@ export function World({ state }: WorldProps) {
                 <boxGeometry args={[5.4, 0.7, 0.3]} />
                 <meshStandardMaterial color="#ffef8a" emissive="#ffef8a" emissiveIntensity={0.16} flatShading />
               </mesh>
+              <Customer
+                canDeliver={state.phase === 'handoff'}
+                onCustomerInteract={onCustomerInteract}
+              />
             </group>
           );
         }
@@ -254,6 +276,68 @@ export function World({ state }: WorldProps) {
           </mesh>
         </group>
       ))}
+    </group>
+  );
+}
+
+function TrafficLight({ position, active }: { position: [number, number, number]; active: boolean }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 1.6, 0]} castShadow>
+        <boxGeometry args={[0.2, 3.2, 0.2]} />
+        <meshStandardMaterial color="#151a27" flatShading />
+      </mesh>
+      <mesh position={[0, 3.1, 0]} castShadow>
+        <boxGeometry args={[0.72, 1.2, 0.28]} />
+        <meshStandardMaterial color="#151a27" flatShading />
+      </mesh>
+      <mesh position={[0, 3.38, -0.16]} castShadow>
+        <cylinderGeometry args={[0.13, 0.13, 0.05, 8]} />
+        <meshStandardMaterial color={active ? '#ff3045' : '#5b2730'} emissive={active ? '#ff3045' : '#000000'} emissiveIntensity={0.5} flatShading />
+      </mesh>
+      <mesh position={[0, 2.86, -0.16]} castShadow>
+        <cylinderGeometry args={[0.13, 0.13, 0.05, 8]} />
+        <meshStandardMaterial color={active ? '#20472c' : '#42ff7a'} emissive={active ? '#000000' : '#42ff7a'} emissiveIntensity={0.5} flatShading />
+      </mesh>
+    </group>
+  );
+}
+
+function Customer({
+  canDeliver,
+  onCustomerInteract
+}: {
+  canDeliver: boolean;
+  onCustomerInteract: () => void;
+}) {
+  return (
+    <group
+      position={[2.25, 0, -2.2]}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (canDeliver) onCustomerInteract();
+      }}
+    >
+      <mesh position={[0, 1.85, 0]} castShadow>
+        <icosahedronGeometry args={[0.34, 0]} />
+        <meshStandardMaterial color="#e7b083" flatShading />
+      </mesh>
+      <mesh position={[0, 1.08, 0]} castShadow>
+        <boxGeometry args={[0.62, 1.15, 0.34]} />
+        <meshStandardMaterial color={canDeliver ? '#ffe45e' : '#7b61ff'} emissive={canDeliver ? '#ffe45e' : '#000000'} emissiveIntensity={canDeliver ? 0.22 : 0} flatShading />
+      </mesh>
+      <mesh position={[-0.22, 0.32, 0]} castShadow>
+        <boxGeometry args={[0.18, 0.72, 0.18]} />
+        <meshStandardMaterial color="#252a3a" flatShading />
+      </mesh>
+      <mesh position={[0.22, 0.32, 0]} castShadow>
+        <boxGeometry args={[0.18, 0.72, 0.18]} />
+        <meshStandardMaterial color="#252a3a" flatShading />
+      </mesh>
+      <mesh position={[0, 2.46, 0]} castShadow>
+        <boxGeometry args={[1.45, 0.28, 0.16]} />
+        <meshStandardMaterial color={canDeliver ? '#ff3045' : '#151a27'} emissive={canDeliver ? '#ff3045' : '#000000'} emissiveIntensity={canDeliver ? 0.28 : 0} flatShading />
+      </mesh>
     </group>
   );
 }

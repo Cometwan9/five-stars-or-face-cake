@@ -14,7 +14,7 @@ import {
   type VehicleState
 } from './vehicle';
 
-export type GamePhase = 'running' | 'finished' | 'failed';
+export type GamePhase = 'running' | 'handoff' | 'finished' | 'failed';
 
 export type GameState = {
   phase: GamePhase;
@@ -24,6 +24,7 @@ export type GameState = {
   cake: CakeState;
   wind: WindState;
   lastFeatureIds: readonly string[];
+  lastSignalId?: string;
   lastBumpId?: string;
   lastObstacleId?: string;
   rating?: RatingResult;
@@ -68,6 +69,7 @@ export function updateGameState(
   const features = getRouteFeatureHits(baseVehicle.position);
   const newlyHitFeatures = features.filter((feature) => !state.lastFeatureIds.includes(feature.id));
   const effects = combineEffects(features, newlyHitFeatures);
+  const signalViolation = getSignalViolation(baseVehicle.position, elapsedRunSeconds, state.lastSignalId);
   const vehicle = applyRouteSpeedEffect(baseVehicle, effects.speedMultiplier);
   const bump = features.find((feature) => feature.kind === 'speedBump' || feature.kind === 'pothole');
   const obstacle = features.find((feature) => feature.kind === 'roadblock');
@@ -78,8 +80,8 @@ export function updateGameState(
     {
       acceleration: getVehicleAcceleration(vehicle, simulationDelta),
       steering: inputSafe.steer * effects.traction,
-      bump: effects.bump,
-      collision: effects.collision,
+      bump: effects.bump + signalViolation.bump,
+      collision: effects.collision + signalViolation.collision,
       speed: vehicle.speed,
       wind: finiteClamp(wind.force + effects.wind, -1, 1),
       traction: effects.traction
@@ -87,8 +89,11 @@ export function updateGameState(
     simulationDelta
   );
 
-  const remainingSeconds = state.remainingSeconds - elapsedSeconds + effects.time;
-  const score = Math.max(0, state.score + effects.score + Math.max(0, vehicle.speed) * simulationDelta * 0.8);
+  const remainingSeconds = state.remainingSeconds - elapsedSeconds + effects.time + signalViolation.time;
+  const score = Math.max(
+    0,
+    state.score + effects.score + signalViolation.score + Math.max(0, vehicle.speed) * simulationDelta * 0.8
+  );
   const condition = getCakeCondition(cake);
   const lastFeatureIds = features.map((feature) => feature.id);
 
@@ -102,6 +107,7 @@ export function updateGameState(
       cake,
       wind,
       lastFeatureIds,
+      lastSignalId: signalViolation.id,
       lastBumpId: bump?.id,
       lastObstacleId: obstacle?.id,
       rating: calculateRating({ remainingSeconds, condition })
@@ -111,16 +117,16 @@ export function updateGameState(
   if (destination) {
     return {
       ...state,
-      phase: 'finished',
+      phase: 'handoff',
       remainingSeconds,
       score,
       vehicle,
       cake,
       wind,
       lastFeatureIds,
+      lastSignalId: signalViolation.id,
       lastBumpId: bump?.id,
-      lastObstacleId: obstacle?.id,
-      rating: calculateRating({ remainingSeconds, condition })
+      lastObstacleId: obstacle?.id
     };
   }
 
@@ -132,8 +138,56 @@ export function updateGameState(
     cake,
     wind,
     lastFeatureIds,
+    lastSignalId: signalViolation.id,
     lastBumpId: bump?.id,
     lastObstacleId: obstacle?.id
+  };
+}
+
+type SignalViolation = {
+  id?: string;
+  bump: number;
+  collision: number;
+  time: number;
+  score: number;
+};
+
+function getSignalViolation(
+  position: VehicleState['position'],
+  elapsedRunSeconds: number,
+  lastSignalId?: string
+): SignalViolation {
+  const signal = [
+    { id: 'signal-70', z: 70 },
+    { id: 'signal-146', z: 146 }
+  ].find((candidate) => Math.abs(position.z - candidate.z) <= 3.2 && Math.abs(position.x) <= 7);
+
+  if (!signal) return { bump: 0, collision: 0, time: 0, score: 0 };
+
+  const isRedForForwardTraffic = elapsedRunSeconds % 12 > 4;
+  if (!isRedForForwardTraffic || lastSignalId === signal.id) {
+    return { id: signal.id, bump: 0, collision: 0, time: 0, score: 0 };
+  }
+
+  return {
+    id: signal.id,
+    bump: 0.35,
+    collision: 0.3,
+    time: -1.8,
+    score: -140
+  };
+}
+
+export function completeDelivery(state: GameState): GameState {
+  if (state.phase !== 'handoff') return state;
+
+  const condition = getCakeCondition(state.cake);
+  const rating = calculateRating({ remainingSeconds: state.remainingSeconds, condition });
+
+  return {
+    ...state,
+    phase: rating.faceCake ? 'failed' : 'finished',
+    rating
   };
 }
 
