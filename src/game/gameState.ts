@@ -31,7 +31,7 @@ export type GameState = {
 };
 
 const MAX_SIMULATION_DELTA_SECONDS = 0.1;
-const ORDER_SECONDS = 75;
+const ORDER_SECONDS = 60;
 
 export type WindState = {
   speed: number;
@@ -70,7 +70,13 @@ export function updateGameState(
   const newlyHitFeatures = features.filter((feature) => !state.lastFeatureIds.includes(feature.id));
   const effects = combineEffects(features, newlyHitFeatures);
   const signalViolation = getSignalViolation(baseVehicle.position, elapsedRunSeconds, state.lastSignalId);
-  const vehicle = applyRouteSpeedEffect(baseVehicle, effects.speedMultiplier);
+  const blockingRoadblock = features.find((feature) => feature.kind === 'roadblock');
+  const vehicle = applyRoadblockStickiness(
+    applyRouteSpeedEffect(baseVehicle, blockingRoadblock ? Math.min(effects.speedMultiplier, 0.18) : effects.speedMultiplier),
+    state.vehicle,
+    inputSafe,
+    blockingRoadblock
+  );
   const bump = features.find((feature) => feature.kind === 'speedBump' || feature.kind === 'pothole');
   const obstacle = features.find((feature) => feature.kind === 'roadblock');
   const destination = getRouteFeatureHit(vehicle.position, 'destination');
@@ -98,6 +104,23 @@ export function updateGameState(
   const lastFeatureIds = features.map((feature) => feature.id);
 
   if (condition === 'faceCake') {
+    return {
+      ...state,
+      phase: 'failed',
+      remainingSeconds,
+      score,
+      vehicle,
+      cake,
+      wind,
+      lastFeatureIds,
+      lastSignalId: signalViolation.id,
+      lastBumpId: bump?.id,
+      lastObstacleId: obstacle?.id,
+      rating: calculateRating({ remainingSeconds, condition })
+    };
+  }
+
+  if (remainingSeconds <= 0) {
     return {
       ...state,
       phase: 'failed',
@@ -158,8 +181,9 @@ function getSignalViolation(
   lastSignalId?: string
 ): SignalViolation {
   const signal = [
-    { id: 'signal-70', z: 70 },
-    { id: 'signal-146', z: 146 }
+    { id: 'signal-78', z: 78 },
+    { id: 'signal-216', z: 216 },
+    { id: 'signal-304', z: 304 }
   ].find((candidate) => Math.abs(position.z - candidate.z) <= 3.2 && Math.abs(position.x) <= 7);
 
   if (!signal) return { bump: 0, collision: 0, time: 0, score: 0 };
@@ -225,6 +249,25 @@ function applyRouteSpeedEffect(vehicle: VehicleState, speedMultiplier: number): 
   return {
     ...vehicle,
     speed: vehicle.speed * finiteClamp(speedMultiplier, 0.2, 1.4)
+  };
+}
+
+function applyRoadblockStickiness(
+  vehicle: VehicleState,
+  previousVehicle: VehicleState,
+  input: VehicleInput,
+  roadblock?: RouteFeature
+): VehicleState {
+  if (!roadblock) return vehicle;
+
+  const tryingToBackOut = input.brake > 0 && input.throttle === 0;
+  if (tryingToBackOut) return vehicle;
+
+  return {
+    ...vehicle,
+    position: previousVehicle.position,
+    speed: 0,
+    previousSpeed: 0
   };
 }
 

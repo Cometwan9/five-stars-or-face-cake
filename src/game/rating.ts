@@ -20,19 +20,19 @@ export function calculateRating(input: RatingInput): RatingResult {
     };
   }
 
+  if (input.remainingSeconds < 0) {
+    return {
+      stars: 1,
+      faceCake: false,
+      comment: 'Order timed out. Complaint form printed before the door opened.'
+    };
+  }
+
   if (input.condition === 'collapsed') {
     return {
       stars: input.remainingSeconds >= 0 ? 2 : 1,
       faceCake: false,
       comment: 'This cake has experienced a major geological event.'
-    };
-  }
-
-  if (input.remainingSeconds < 0) {
-    return {
-      stars: input.condition === 'perfect' ? 3 : 2,
-      faceCake: false,
-      comment: 'Late, but at least structurally recognizable.'
     };
   }
 

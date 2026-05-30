@@ -20,6 +20,8 @@ export function RiderView({ state }: RiderViewProps) {
   const layerSlip = severe ? 0.16 * state.wind.direction : condition === 'slightTilt' ? 0.06 * state.wind.direction : 0;
   const berryDrop = severe ? -0.36 : stress > 0.4 ? -0.12 : 0;
   const vehicleLean = Math.max(-0.08, Math.min(0.08, -vehicle.speed * state.wind.force * 0.006));
+  const airborneCake = condition === 'faceCake';
+  const cakeFlight = airborneCake ? Math.min(1, stress) : 0;
 
   return (
     <group
@@ -29,11 +31,11 @@ export function RiderView({ state }: RiderViewProps) {
       <group position={[0, 0.86, 1.12]} rotation={[0, 0, vehicleLean]}>
         <mesh position={[0, -0.78, -0.44]} scale={[1, 0.9, 1]} castShadow>
           <boxGeometry args={[1.4, 0.36, 1.18]} />
-          <meshStandardMaterial color="#17bda5" flatShading />
+          <meshStandardMaterial color="#1a1d27" flatShading />
         </mesh>
         <mesh position={[0, -0.56, -0.1]} rotation={[0.12, 0, 0]} castShadow>
           <boxGeometry args={[1.04, 0.32, 0.82]} />
-          <meshStandardMaterial color="#20dfbd" flatShading />
+          <meshStandardMaterial color="#f0bd22" flatShading />
         </mesh>
         <mesh position={[0, -0.38, -0.46]} rotation={[0.18, 0, 0]} castShadow>
           <boxGeometry args={[0.78, 0.18, 0.24]} />
@@ -54,7 +56,7 @@ export function RiderView({ state }: RiderViewProps) {
         </mesh>
         <mesh position={[0, -0.56, -1.05]} castShadow>
           <boxGeometry args={[1.28, 0.16, 0.34]} />
-          <meshStandardMaterial color="#14a58e" flatShading />
+          <meshStandardMaterial color="#f0bd22" flatShading />
         </mesh>
         <mesh position={[0, -0.34, 0.22]} castShadow>
           <boxGeometry args={[2.15, 0.11, 0.16]} />
@@ -105,9 +107,13 @@ export function RiderView({ state }: RiderViewProps) {
           </mesh>
         </group>
         <group
-          position={[0, 0.33 + Math.sin(state.remainingSeconds * 14) * stress * 0.03, 0.84]}
-          rotation={[cake.tiltZ * 1.16, 0, -cake.tiltX * 1.16]}
-          scale={[1.18, 1.18, 1.18]}
+          position={[
+            cakeFlight * state.wind.direction * 0.5,
+            0.25 + cakeFlight * 0.75 + Math.sin(state.remainingSeconds * 14) * stress * 0.02,
+            0.78 + cakeFlight * 0.85
+          ]}
+          rotation={[cake.tiltZ * 1.16 + cakeFlight * 0.55, cakeFlight * state.wind.direction * 0.8, -cake.tiltX * 1.16]}
+          scale={[0.84, 0.84, 0.84]}
         >
           <mesh position={[0, -0.16, 0]} scale={[collapsed ? 1.22 : 1, cakeSquash, collapsed ? 1.12 : 1]} castShadow>
             <cylinderGeometry args={[0.5, 0.52, 0.22, 10]} />
@@ -189,8 +195,8 @@ function DeliveryScooterModel() {
   const yOffset = -0.86 - (geometry.boundingBox?.min.y ?? 0) * 1.9;
 
   return (
-    <mesh geometry={geometry} position={[0, yOffset, -0.62]} scale={[1.9, 1.9, 1.9]} rotation={[0, Math.PI, 0]} castShadow>
-      <meshStandardMaterial color="#0fc0a8" roughness={0.82} metalness={0.08} flatShading />
+    <mesh geometry={geometry} position={[0, yOffset, -0.58]} scale={[2.12, 2.12, 2.12]} rotation={[0, Math.PI / 2, 0]} castShadow>
+      <meshStandardMaterial color="#f0bd22" roughness={0.72} metalness={0.12} flatShading />
     </mesh>
   );
 }

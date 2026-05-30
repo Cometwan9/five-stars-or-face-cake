@@ -10,8 +10,11 @@ describe('rating', () => {
     expect(calculateRating({ remainingSeconds: 10, condition: 'slightTilt' }).stars).toBe(4);
   });
 
-  it('gives three stars for late intact cake', () => {
-    expect(calculateRating({ remainingSeconds: -4, condition: 'perfect' }).stars).toBe(3);
+  it('fails timed-out orders with a complaint even if the cake is intact', () => {
+    const result = calculateRating({ remainingSeconds: -4, condition: 'perfect' });
+
+    expect(result.stars).toBe(1);
+    expect(result.faceCake).toBe(false);
   });
 
   it('uses face-cake result for catastrophic failure', () => {

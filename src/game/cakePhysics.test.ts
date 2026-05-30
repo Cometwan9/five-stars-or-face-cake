@@ -26,7 +26,7 @@ describe('cake physics', () => {
     };
 
     const afterBrake = updateCakePhysics(createCakeState(), braking, 0.2);
-    expect(afterBrake.tiltZ).toBeGreaterThan(0.15);
+    expect(afterBrake.tiltZ).toBeGreaterThan(0.12);
 
     let recovered = afterBrake;
     for (let i = 0; i < 80; i += 1) {
@@ -83,8 +83,8 @@ describe('cake physics', () => {
       0.16
     );
 
-    expect(damaged.stability).toBeLessThan(90);
-    expect(getCakeCondition(damaged)).not.toBe('perfect');
+    expect(damaged.stability).toBeLessThan(94);
+    expect(getCakeCondition(damaged)).toBe('perfect');
   });
 
   it('slowly repairs structural stability during smooth recovery', () => {

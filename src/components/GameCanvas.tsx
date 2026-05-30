@@ -38,7 +38,7 @@ function FollowCamera({ state }: Pick<GameCanvasProps, 'state'>) {
     const speedPressure = Math.min(1, Math.abs(state.vehicle.speed) / 14);
     const cakePressure = Math.min(1, Math.hypot(state.cake.tiltX, state.cake.tiltZ));
     const timePressure = state.remainingSeconds < 18 ? 1 : 0;
-    const shake = (speedPressure * 0.045 + cakePressure * 0.055 + timePressure * 0.035);
+    const shake = (speedPressure * 0.024 + cakePressure * 0.032 + timePressure * 0.025);
     const pulse = clock.elapsedTime * (14 + speedPressure * 14);
     const shakeX = Math.sin(pulse) * shake;
     const shakeY = Math.cos(pulse * 0.73) * shake * 0.65;

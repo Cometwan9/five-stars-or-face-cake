@@ -5,7 +5,7 @@ describe('game state', () => {
   it('counts down while running', () => {
     const state = updateGameState(createGameState(), { throttle: 0, brake: 0, steer: 0 }, 1);
 
-    expect(state.remainingSeconds).toBe(74);
+    expect(state.remainingSeconds).toBe(59);
     expect(state.phase).toBe('running');
   });
 
@@ -31,7 +31,7 @@ describe('game state', () => {
 
   it('waits for customer handoff when reaching the destination', () => {
     let state = createGameState();
-    for (let i = 0; i < 900 && state.phase === 'running'; i += 1) {
+    for (let i = 0; i < 3600 && state.phase === 'running'; i += 1) {
       state = updateGameState(state, { throttle: 1, brake: 0, steer: 0 }, 1 / 60);
     }
 
@@ -47,14 +47,14 @@ describe('game state', () => {
       {
         ...createGameState(),
         vehicle: {
-          position: { x: 0, z: 27 },
+          position: { x: 0, z: 29 },
           heading: 0,
           speed: 18,
           previousSpeed: 18
         },
         cake: {
           ...createGameState().cake,
-          stability: 11
+          stability: 5
         }
       },
       { throttle: 1, brake: 0, steer: 1 },
@@ -68,9 +68,24 @@ describe('game state', () => {
   it('counts down large deltas without applying the whole spike to physics', () => {
     const state = updateGameState(createGameState(), { throttle: 1, brake: 0, steer: 1 }, 2);
 
-    expect(state.remainingSeconds).toBe(73);
+    expect(state.remainingSeconds).toBe(58);
     expect(state.vehicle.position.z).toBeLessThan(0.1);
     expect(state.cake.stability).toBeGreaterThan(95);
+  });
+
+  it('fails timed-out orders with a complaint rating', () => {
+    const state = updateGameState(
+      {
+        ...createGameState(),
+        remainingSeconds: 0.01
+      },
+      { throttle: 0, brake: 0, steer: 0 },
+      1 / 60
+    );
+
+    expect(state.phase).toBe('failed');
+    expect(state.rating?.stars).toBe(1);
+    expect(state.rating?.faceCake).toBe(false);
   });
 
   it('leaves terminal states unchanged by identity', () => {
@@ -109,7 +124,7 @@ describe('game state', () => {
     for (const deltaSeconds of [Number.NaN, Infinity, -Infinity]) {
       const state = updateGameState(createGameState(), { throttle: 1, brake: 0, steer: 1 }, deltaSeconds);
 
-      expect(state.remainingSeconds).toBe(75);
+      expect(state.remainingSeconds).toBe(60);
       expect(Number.isFinite(state.vehicle.position.x)).toBe(true);
       expect(Number.isFinite(state.vehicle.position.z)).toBe(true);
       expect(Number.isFinite(state.vehicle.speed)).toBe(true);
@@ -123,7 +138,7 @@ describe('game state', () => {
     const overlapping = {
       ...createGameState(),
       vehicle: {
-        position: { x: -4.5, z: 88 },
+        position: { x: -4.5, z: 102 },
         heading: 0,
         speed: 0,
         previousSpeed: 0
@@ -143,7 +158,7 @@ describe('game state', () => {
       ...createGameState(),
       score: 120,
       vehicle: {
-        position: { x: -4.5, z: 88 },
+        position: { x: -4.5, z: 102 },
         heading: 0,
         speed: 12,
         previousSpeed: 12
@@ -160,7 +175,7 @@ describe('game state', () => {
     const overlapping = {
       ...createGameState(),
       vehicle: {
-        position: { x: 4.8, z: 70 },
+        position: { x: 4.8, z: 78 },
         heading: 0,
         speed: 0,
         previousSpeed: 0
@@ -178,10 +193,10 @@ describe('game state', () => {
   it('red lights penalize unsafe crossings once per intersection overlap', () => {
     const crossing = {
       ...createGameState(),
-      remainingSeconds: 69,
+      remainingSeconds: 53,
       score: 200,
       vehicle: {
-        position: { x: 0, z: 70 },
+        position: { x: 0, z: 78 },
         heading: 0,
         speed: 8,
         previousSpeed: 8
@@ -201,7 +216,7 @@ describe('game state', () => {
       {
         ...createGameState(),
         vehicle: {
-          position: { x: -4.5, z: 88 },
+          position: { x: -4.5, z: 102 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -214,7 +229,7 @@ describe('game state', () => {
       {
         ...first,
         vehicle: {
-          position: { x: 0, z: 104 },
+          position: { x: 0, z: 118 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -227,7 +242,7 @@ describe('game state', () => {
       {
         ...left,
         vehicle: {
-          position: { x: -4.5, z: 88 },
+          position: { x: -4.5, z: 102 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -245,7 +260,7 @@ describe('game state', () => {
       {
         ...createGameState(),
         vehicle: {
-          position: { x: 0, z: 28 },
+          position: { x: 0, z: 30 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -258,7 +273,7 @@ describe('game state', () => {
       {
         ...first,
         vehicle: {
-          position: { x: 0, z: 42 },
+          position: { x: 0, z: 46 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -271,7 +286,7 @@ describe('game state', () => {
       {
         ...left,
         vehicle: {
-          position: { x: 0, z: 28 },
+          position: { x: 0, z: 30 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -289,7 +304,7 @@ describe('game state', () => {
       const overlapping = {
         ...createGameState(),
         vehicle: {
-          position: { x: 0, z: 28 },
+          position: { x: 0, z: 30 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -313,7 +328,7 @@ describe('game state', () => {
       const overlapping = {
         ...createGameState(),
         vehicle: {
-          position: { x: -4.5, z: 88 },
+          position: { x: -4.5, z: 102 },
           heading: 0,
           speed: 0,
           previousSpeed: 0

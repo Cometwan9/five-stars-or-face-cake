@@ -21,6 +21,16 @@ export function ResultOverlay({ state, onRestart }: ResultOverlayProps) {
     : state.rating.stars <= 2
       ? 'Complaint Form'
       : 'Customer Review';
+  const noteTitle = state.rating.faceCake
+    ? '配送失败'
+    : state.rating.stars >= 4
+      ? '五星好评'
+      : '收到差评';
+  const customerLine = state.rating.faceCake
+    ? '顾客：“这不是蛋糕，这是攻击。”'
+    : state.rating.stars >= 4
+      ? '顾客：“辛苦了，蛋糕还活着，五星。”'
+      : '顾客：“平台会听到我的声音。”';
 
   return (
     <section
@@ -29,10 +39,14 @@ export function ResultOverlay({ state, onRestart }: ResultOverlayProps) {
       aria-modal="true"
       aria-label="Delivery result"
     >
-      <p className="eyebrow">{outcome}</p>
-      <h1>{stars}</h1>
-      <p>Time remaining: {Math.ceil(state.remainingSeconds)}s</p>
-      <p>{state.rating.comment}</p>
+      <article className="result-note">
+        <p className="eyebrow">{outcome}</p>
+        <h1>{noteTitle}</h1>
+        <p className="stars">{stars}</p>
+        <p>{customerLine}</p>
+        <p>Time remaining: {Math.ceil(state.remainingSeconds)}s</p>
+        <p>{state.rating.comment}</p>
+      </article>
       <button ref={restartButtonRef} type="button" onClick={onRestart}>
         Try again
       </button>

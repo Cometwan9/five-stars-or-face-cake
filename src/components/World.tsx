@@ -35,7 +35,7 @@ export function World({ state, onCustomerInteract }: WorldProps) {
         <meshStandardMaterial color="#2f3442" flatShading />
       </mesh>
 
-      {[70, 146].map((z) => (
+      {[78, 216, 304].map((z) => (
         <group key={`crossroad-${z}`} position={[0, 0.035, z]}>
           <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
             <planeGeometry args={[50, 15]} />
@@ -260,22 +260,6 @@ export function World({ state, onCustomerInteract }: WorldProps) {
         );
       })}
 
-      {Array.from({ length: 5 }, (_, index) => (
-        <group key={`warning-gate-${index}`} position={[0, 0, 28 + index * 34]}>
-          <mesh position={[-6.4, 1.45, 0]} castShadow>
-            <boxGeometry args={[0.22, 2.9, 0.22]} />
-            <meshStandardMaterial color="#1b2030" flatShading />
-          </mesh>
-          <mesh position={[6.4, 1.45, 0]} castShadow>
-            <boxGeometry args={[0.22, 2.9, 0.22]} />
-            <meshStandardMaterial color="#1b2030" flatShading />
-          </mesh>
-          <mesh position={[0, 2.8, 0]} castShadow>
-            <boxGeometry args={[13, 0.18, 0.2]} />
-            <meshStandardMaterial color="#1b2030" flatShading />
-          </mesh>
-        </group>
-      ))}
     </group>
   );
 }

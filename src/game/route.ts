@@ -21,57 +21,84 @@ export type RouteFeature = Readonly<{
   }>;
 }>;
 
-export const ROUTE_LENGTH = 185;
+export const ROUTE_LENGTH = 360;
 
 export const ROUTE_FEATURES: readonly RouteFeature[] = [
-  createFeature('speed-bump-1', 'speedBump', { x: 0, z: 28 }, 4.5, {
-    bump: 0.75,
-    time: -0.25,
+  createFeature('speed-bump-1', 'speedBump', { x: 0, z: 30 }, 4.5, {
+    bump: 0.34,
+    time: -0.15,
     score: 15,
-    speedMultiplier: 0.92
+    speedMultiplier: 0.95
   }),
-  createFeature('oil-slick-1', 'oilSlick', { x: -3.4, z: 52 }, 4.2, {
-    bump: 0.12,
+  createFeature('oil-slick-1', 'oilSlick', { x: -3.4, z: 54 }, 4.2, {
+    bump: 0.06,
     time: -0.35,
     score: -25,
-    traction: 1.65,
+    traction: 1.45,
     speedMultiplier: 0.98
   }),
-  createFeature('time-gate-1', 'timeGate', { x: 4.8, z: 70 }, 3.5, {
-    time: 4,
-    score: 160,
+  createFeature('time-gate-1', 'timeGate', { x: 4.8, z: 78 }, 3.5, {
+    time: 2,
+    score: 120,
     speedMultiplier: 1.03
   }),
-  createFeature('roadblock-1', 'roadblock', { x: -4.5, z: 88 }, 3.2, {
-    collision: 0.85,
+  createFeature('roadblock-1', 'roadblock', { x: -4.5, z: 102 }, 3.2, {
+    collision: 0.65,
     time: -1.25,
     score: -100,
     speedMultiplier: 0.48
   }),
-  createFeature('wind-tunnel-1', 'windTunnel', { x: 0, z: 108 }, 5.2, {
-    bump: 0.18,
+  createFeature('wind-tunnel-1', 'windTunnel', { x: 0, z: 126 }, 5.2, {
+    bump: 0.08,
     time: -0.2,
     score: 30,
-    wind: 0.85,
-    traction: 1.18,
+    wind: 0.65,
+    traction: 1.1,
     speedMultiplier: 1.04
   }),
-  createFeature('pothole-1', 'pothole', { x: 5, z: 128 }, 3.8, {
-    bump: 1.25,
+  createFeature('pothole-1', 'pothole', { x: 5, z: 156 }, 3.8, {
+    bump: 0.72,
     time: -0.65,
     score: -55,
-    speedMultiplier: 0.72
+    speedMultiplier: 0.82
   }),
-  createFeature('time-gate-2', 'timeGate', { x: -4.8, z: 146 }, 3.5, {
-    time: 3,
-    score: 120,
+  createFeature('speed-bump-2', 'speedBump', { x: -2.8, z: 188 }, 4.2, {
+    bump: 0.32,
+    time: -0.15,
+    score: 15,
+    speedMultiplier: 0.95
+  }),
+  createFeature('time-gate-2', 'timeGate', { x: -4.8, z: 216 }, 3.5, {
+    time: 2,
+    score: 110,
     speedMultiplier: 1.02
   }),
-  createFeature('roadblock-2', 'roadblock', { x: 3.8, z: 162 }, 3.2, {
-    collision: 0.78,
+  createFeature('roadblock-2', 'roadblock', { x: 3.8, z: 244 }, 3.2, {
+    collision: 0.62,
     time: -1,
     score: -90,
     speedMultiplier: 0.52
+  }),
+  createFeature('oil-slick-2', 'oilSlick', { x: 3.2, z: 274 }, 4.2, {
+    bump: 0.06,
+    time: -0.3,
+    score: -25,
+    traction: 1.45,
+    speedMultiplier: 0.98
+  }),
+  createFeature('wind-tunnel-2', 'windTunnel', { x: -1.8, z: 304 }, 5.2, {
+    bump: 0.08,
+    time: -0.2,
+    score: 35,
+    wind: -0.62,
+    traction: 1.1,
+    speedMultiplier: 1.04
+  }),
+  createFeature('pothole-2', 'pothole', { x: -4.8, z: 328 }, 3.8, {
+    bump: 0.68,
+    time: -0.6,
+    score: -50,
+    speedMultiplier: 0.84
   }),
   createFeature('customer-door', 'destination', { x: 0, z: ROUTE_LENGTH }, 9, {
     score: 500

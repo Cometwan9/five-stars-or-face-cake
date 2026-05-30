@@ -118,6 +118,59 @@ p {
   background: linear-gradient(90deg, #3dff87, #ffe45e, #ff3045);
 }
 
+.speedometer {
+  position: absolute;
+  right: 18px;
+  bottom: 66px;
+  width: 116px;
+  height: 82px;
+  border: 3px solid #121625;
+  border-radius: 116px 116px 8px 8px;
+  background: #151a27;
+  box-shadow: 4px 4px 0 #121625;
+  color: #ffe45e;
+  font-family: "Trebuchet MS", Inter, ui-sans-serif, system-ui, sans-serif;
+  text-align: center;
+}
+
+.speedometer::before {
+  position: absolute;
+  inset: 12px 12px auto;
+  height: 48px;
+  border-radius: 999px 999px 0 0;
+  background: conic-gradient(from 240deg, #3dff87 0deg, #ffe45e 78deg, #ff3045 150deg, transparent 151deg);
+  content: "";
+}
+
+.speedometer span {
+  position: relative;
+  display: block;
+  margin-top: 18px;
+  color: #fff4bf;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.speedometer strong {
+  position: relative;
+  display: block;
+  color: #ff3045;
+  font-size: 1.35rem;
+  line-height: 1;
+  text-shadow: 1px 1px 0 #fff4bf;
+}
+
+.speedometer i {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  width: 4px;
+  height: 42px;
+  transform-origin: 50% 100%;
+  background: #fff4bf;
+  box-shadow: 0 0 0 2px #121625;
+}
+
 .hud-urgent {
   animation: danger-pulse 360ms steps(2, end) infinite;
 }
@@ -149,9 +202,27 @@ p {
 }
 
 .result-overlay h1 {
-  color: #ffd75f;
-  font-size: clamp(3rem, 14vw, 8rem);
+  color: #121625;
+  font-size: clamp(2.4rem, 11vw, 6rem);
   line-height: 1;
+}
+
+.result-note {
+  width: min(560px, calc(100vw - 48px));
+  padding: 24px;
+  transform: rotate(-1.5deg);
+  border: 3px solid #121625;
+  border-radius: 2px;
+  background: #fff0a8;
+  color: #121625;
+  box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.45);
+}
+
+.result-note .stars {
+  color: #ff3045;
+  font-size: clamp(2rem, 8vw, 4.6rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
 }
 
 .result-overlay button {
@@ -187,6 +258,13 @@ p {
     bottom: 10px;
     left: 10px;
     text-align: center;
+  }
+
+  .speedometer {
+    right: 10px;
+    bottom: 58px;
+    width: 92px;
+    height: 68px;
   }
 }
 
