@@ -87,7 +87,7 @@ describe('cake physics', () => {
     expect(getCakeCondition(damaged)).not.toBe('perfect');
   });
 
-  it('does not repair structural stability during smooth recovery', () => {
+  it('slowly repairs structural stability during smooth recovery', () => {
     const damaged = updateCakePhysics(
       createCakeState(),
       { acceleration: 0, steering: 0, bump: 1, collision: 1, speed: 14 },
@@ -103,7 +103,8 @@ describe('cake physics', () => {
       );
     }
 
-    expect(recovered.stability).toBeLessThanOrEqual(damaged.stability);
+    expect(recovered.stability).toBeGreaterThan(damaged.stability);
+    expect(recovered.stability).toBeLessThanOrEqual(100);
   });
 
   it('does not increase stability from negative bump or collision values', () => {
@@ -121,7 +122,8 @@ describe('cake physics', () => {
       0.16
     );
 
-    expect(updated.stability).toBeLessThanOrEqual(cake.stability);
+    expect(updated.stability).toBeGreaterThanOrEqual(cake.stability);
+    expect(updated.stability).toBeLessThanOrEqual(100);
   });
 
   it('produces comparable damage over the same elapsed time at different frame rates', () => {

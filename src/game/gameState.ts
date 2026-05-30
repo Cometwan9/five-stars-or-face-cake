@@ -5,7 +5,7 @@ import {
   type CakeState
 } from './cakePhysics';
 import { calculateRating, type RatingResult } from './rating';
-import { getRouteFeatureHit } from './route';
+import { getRouteFeatureHit, getRouteFeatureHits, type RouteFeature } from './route';
 import {
   createVehicleState,
   getVehicleAcceleration,
@@ -19,9 +19,11 @@ export type GamePhase = 'running' | 'finished' | 'failed';
 export type GameState = {
   phase: GamePhase;
   remainingSeconds: number;
+  score: number;
   vehicle: VehicleState;
   cake: CakeState;
   wind: WindState;
+  lastFeatureIds: readonly string[];
   lastBumpId?: string;
   lastObstacleId?: string;
   rating?: RatingResult;
@@ -40,9 +42,11 @@ export function createGameState(): GameState {
   return {
     phase: 'running',
     remainingSeconds: ORDER_SECONDS,
+    score: 0,
     vehicle: createVehicleState(),
     cake: createCakeState(),
-    wind: createWindState(0)
+    wind: createWindState(0),
+    lastFeatureIds: []
   };
 }
 
@@ -60,37 +64,44 @@ export function updateGameState(
 
   const elapsedRunSeconds = ORDER_SECONDS - state.remainingSeconds + elapsedSeconds;
   const wind = createWindState(elapsedRunSeconds);
-  const vehicle = updateVehicle(state.vehicle, inputSafe, simulationDelta);
-  const bump = getRouteFeatureHit(vehicle.position, 'bump');
-  const obstacle = getRouteFeatureHit(vehicle.position, 'obstacle');
+  const baseVehicle = updateVehicle(state.vehicle, inputSafe, simulationDelta);
+  const features = getRouteFeatureHits(baseVehicle.position);
+  const newlyHitFeatures = features.filter((feature) => !state.lastFeatureIds.includes(feature.id));
+  const effects = combineEffects(features, newlyHitFeatures);
+  const vehicle = applyRouteSpeedEffect(baseVehicle, effects.speedMultiplier);
+  const bump = features.find((feature) => feature.kind === 'speedBump' || feature.kind === 'pothole');
+  const obstacle = features.find((feature) => feature.kind === 'roadblock');
   const destination = getRouteFeatureHit(vehicle.position, 'destination');
-  const bumpImpulse = bump && bump.id !== state.lastBumpId ? 1 : 0;
-  const collisionImpulse = obstacle && obstacle.id !== state.lastObstacleId ? 0.65 : 0;
 
   const cake = updateCakePhysics(
     state.cake,
     {
       acceleration: getVehicleAcceleration(vehicle, simulationDelta),
-      steering: inputSafe.steer,
-      bump: bumpImpulse,
-      collision: collisionImpulse,
+      steering: inputSafe.steer * effects.traction,
+      bump: effects.bump,
+      collision: effects.collision,
       speed: vehicle.speed,
-      wind: wind.force
+      wind: finiteClamp(wind.force + effects.wind, -1, 1),
+      traction: effects.traction
     },
     simulationDelta
   );
 
-  const remainingSeconds = state.remainingSeconds - elapsedSeconds;
+  const remainingSeconds = state.remainingSeconds - elapsedSeconds + effects.time;
+  const score = Math.max(0, state.score + effects.score + Math.max(0, vehicle.speed) * simulationDelta * 0.8);
   const condition = getCakeCondition(cake);
+  const lastFeatureIds = features.map((feature) => feature.id);
 
   if (condition === 'faceCake') {
     return {
       ...state,
       phase: 'failed',
       remainingSeconds,
+      score,
       vehicle,
       cake,
       wind,
+      lastFeatureIds,
       lastBumpId: bump?.id,
       lastObstacleId: obstacle?.id,
       rating: calculateRating({ remainingSeconds, condition })
@@ -102,9 +113,11 @@ export function updateGameState(
       ...state,
       phase: 'finished',
       remainingSeconds,
+      score,
       vehicle,
       cake,
       wind,
+      lastFeatureIds,
       lastBumpId: bump?.id,
       lastObstacleId: obstacle?.id,
       rating: calculateRating({ remainingSeconds, condition })
@@ -114,11 +127,50 @@ export function updateGameState(
   return {
     ...state,
     remainingSeconds,
+    score,
     vehicle,
     cake,
     wind,
+    lastFeatureIds,
     lastBumpId: bump?.id,
     lastObstacleId: obstacle?.id
+  };
+}
+
+type CombinedRouteEffects = {
+  bump: number;
+  collision: number;
+  time: number;
+  score: number;
+  wind: number;
+  traction: number;
+  speedMultiplier: number;
+};
+
+function combineEffects(
+  activeFeatures: readonly RouteFeature[],
+  newlyHitFeatures: readonly RouteFeature[]
+): CombinedRouteEffects {
+  return {
+    bump: newlyHitFeatures.reduce((total, feature) => total + feature.effect.bump, 0),
+    collision: newlyHitFeatures.reduce((total, feature) => total + feature.effect.collision, 0),
+    time: newlyHitFeatures.reduce((total, feature) => total + feature.effect.time, 0),
+    score: newlyHitFeatures.reduce((total, feature) => total + feature.effect.score, 0),
+    wind: activeFeatures.reduce((total, feature) => total + feature.effect.wind, 0),
+    traction: activeFeatures.reduce((total, feature) => Math.max(total, feature.effect.traction), 1),
+    speedMultiplier: newlyHitFeatures.reduce(
+      (multiplier, feature) => multiplier * feature.effect.speedMultiplier,
+      1
+    )
+  };
+}
+
+function applyRouteSpeedEffect(vehicle: VehicleState, speedMultiplier: number): VehicleState {
+  if (Math.abs(speedMultiplier - 1) < 0.001) return vehicle;
+
+  return {
+    ...vehicle,
+    speed: vehicle.speed * finiteClamp(speedMultiplier, 0.2, 1.4)
   };
 }
 

@@ -85,7 +85,7 @@ export function World({ state }: WorldProps) {
           );
         }
 
-        if (feature.kind === 'obstacle') {
+        if (feature.kind === 'roadblock') {
           return (
             <group key={feature.id} position={[feature.position.x, 0, feature.position.z]}>
               <mesh position={[0, 1.55, 0]} castShadow>
@@ -124,13 +124,68 @@ export function World({ state }: WorldProps) {
           );
         }
 
+        if (feature.kind === 'oilSlick') {
+          return (
+            <group key={feature.id} position={[feature.position.x, 0, feature.position.z]}>
+              <mesh position={[0, 0.12, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+                <circleGeometry args={[1.8, 8]} />
+                <meshStandardMaterial color="#101522" transparent opacity={0.78} flatShading />
+              </mesh>
+              {[-0.75, 0.2, 0.88].map((x, index) => (
+                <mesh key={x} position={[x, 0.16, -0.45 + index * 0.45]} rotation={[-Math.PI / 2, 0, 0.3]} receiveShadow>
+                  <circleGeometry args={[0.48, 7]} />
+                  <meshStandardMaterial color="#35405a" transparent opacity={0.72} flatShading />
+                </mesh>
+              ))}
+            </group>
+          );
+        }
+
+        if (feature.kind === 'windTunnel') {
+          return (
+            <group key={feature.id} position={[feature.position.x, 0, feature.position.z]}>
+              {[-3.2, 3.2].map((x) => (
+                <mesh key={x} position={[x, 1.35, 0]} castShadow>
+                  <boxGeometry args={[0.24, 2.7, 0.24]} />
+                  <meshStandardMaterial color="#52ffd2" emissive="#52ffd2" emissiveIntensity={0.22} flatShading />
+                </mesh>
+              ))}
+              <mesh position={[0, 2.7, 0]} castShadow>
+                <boxGeometry args={[6.6, 0.22, 0.22]} />
+                <meshStandardMaterial color="#52ffd2" emissive="#52ffd2" emissiveIntensity={0.22} flatShading />
+              </mesh>
+              {[-1.8, 0, 1.8].map((x) => (
+                <mesh key={x} position={[x, 1.2, -0.2]} rotation={[0, 0, state.wind.direction * 0.8]} castShadow>
+                  <boxGeometry args={[1.3, 0.08, 0.08]} />
+                  <meshStandardMaterial color="#b6fff1" transparent opacity={0.72} flatShading />
+                </mesh>
+              ))}
+            </group>
+          );
+        }
+
+        if (feature.kind === 'timeGate') {
+          return (
+            <group key={feature.id} position={[feature.position.x, 0, feature.position.z]}>
+              <mesh position={[0, 1.1, 0]} rotation={[0, state.remainingSeconds * 1.4, 0]} castShadow>
+                <octahedronGeometry args={[0.72, 0]} />
+                <meshStandardMaterial color="#ffe45e" emissive="#ffe45e" emissiveIntensity={0.45} flatShading />
+              </mesh>
+              <mesh position={[0, 0.12, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+                <ringGeometry args={[1.1, 1.45, 8]} />
+                <meshStandardMaterial color="#ffe45e" emissive="#ffe45e" emissiveIntensity={0.28} flatShading />
+              </mesh>
+            </group>
+          );
+        }
+
         return (
           <group key={feature.id} position={[feature.position.x, 0, feature.position.z]}>
             <mesh position={[0, 0.08, 0]} castShadow>
               <boxGeometry args={[10.6, 0.18, 1.2]} />
-              <meshStandardMaterial color="#c99038" flatShading />
+              <meshStandardMaterial color={feature.kind === 'pothole' ? '#9d5a34' : '#c99038'} flatShading />
             </mesh>
-            {feature.id.includes('pothole') ? (
+            {feature.kind === 'pothole' ? (
               <mesh position={[0, 0.13, 1.25]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
                 <circleGeometry args={[1.35, 8]} />
                 <meshStandardMaterial color="#121621" flatShading />

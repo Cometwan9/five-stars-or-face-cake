@@ -5,9 +5,9 @@ describe('route feature hit detection', () => {
   it('returns a feature hit inside and at its radius', () => {
     const bump = ROUTE_FEATURES[0];
 
-    expect(getRouteFeatureHit(bump.position, 'bump')).toBe(bump);
+    expect(getRouteFeatureHit(bump.position, 'speedBump')).toBe(bump);
     expect(
-      getRouteFeatureHit({ x: bump.position.x + bump.radius, z: bump.position.z }, 'bump')
+      getRouteFeatureHit({ x: bump.position.x + bump.radius, z: bump.position.z }, 'speedBump')
     ).toBe(bump);
   });
 
@@ -15,13 +15,24 @@ describe('route feature hit detection', () => {
     const bump = ROUTE_FEATURES[0];
 
     expect(
-      getRouteFeatureHit({ x: bump.position.x + bump.radius + 0.01, z: bump.position.z }, 'bump')
+      getRouteFeatureHit({ x: bump.position.x + bump.radius + 0.01, z: bump.position.z }, 'speedBump')
     ).toBeUndefined();
   });
 
   it('filters out hits with the wrong feature kind', () => {
-    const obstacle = ROUTE_FEATURES[1];
+    const obstacle = ROUTE_FEATURES.find((feature) => feature.kind === 'roadblock');
 
-    expect(getRouteFeatureHit(obstacle.position, 'bump')).toBeUndefined();
+    expect(obstacle).toBeDefined();
+    expect(getRouteFeatureHit(obstacle!.position, 'speedBump')).toBeUndefined();
+  });
+
+  it('exposes different route effects for different hazards', () => {
+    const roadblock = ROUTE_FEATURES.find((feature) => feature.kind === 'roadblock');
+    const timeGate = ROUTE_FEATURES.find((feature) => feature.kind === 'timeGate');
+    const oil = ROUTE_FEATURES.find((feature) => feature.kind === 'oilSlick');
+
+    expect(roadblock?.effect.collision).toBeGreaterThan(0);
+    expect(timeGate?.effect.time).toBeGreaterThan(0);
+    expect(oil?.effect.traction).toBeGreaterThan(1);
   });
 });

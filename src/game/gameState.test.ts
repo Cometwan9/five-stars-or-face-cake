@@ -13,6 +13,7 @@ describe('game state', () => {
     const initial = createGameState();
     const next = updateGameState(initial, { throttle: 0, brake: 0, steer: 0 }, 1);
 
+    expect(initial.score).toBe(0);
     expect(initial.wind.speed).toBeGreaterThan(0);
     expect(Math.abs(initial.wind.force)).toBeLessThanOrEqual(1);
     expect(next.wind).not.toEqual(initial.wind);
@@ -43,7 +44,7 @@ describe('game state', () => {
       {
         ...createGameState(),
         vehicle: {
-          position: { x: 0, z: 41 },
+          position: { x: 0, z: 27 },
           heading: 0,
           speed: 18,
           previousSpeed: 18
@@ -109,7 +110,7 @@ describe('game state', () => {
     const overlapping = {
       ...createGameState(),
       vehicle: {
-        position: { x: -4.5, z: 86 },
+        position: { x: -4.5, z: 88 },
         heading: 0,
         speed: 0,
         previousSpeed: 0
@@ -120,7 +121,45 @@ describe('game state', () => {
     const second = updateGameState(first, { throttle: 0, brake: 0, steer: 0 }, 0.05);
 
     expect(first.cake.stability).toBeLessThan(overlapping.cake.stability);
-    expect(second.cake.stability).toBe(first.cake.stability);
+    expect(second.cake.stability).toBeGreaterThanOrEqual(first.cake.stability);
+    expect(second.cake.stability - first.cake.stability).toBeLessThan(0.2);
+  });
+
+  it('roadblocks slow the scooter and penalize score', () => {
+    const overlapping = {
+      ...createGameState(),
+      score: 120,
+      vehicle: {
+        position: { x: -4.5, z: 88 },
+        heading: 0,
+        speed: 12,
+        previousSpeed: 12
+      }
+    };
+
+    const hit = updateGameState(overlapping, { throttle: 0, brake: 0, steer: 0 }, 0.05);
+
+    expect(hit.vehicle.speed).toBeLessThan(overlapping.vehicle.speed);
+    expect(hit.score).toBeLessThan(overlapping.score);
+  });
+
+  it('time gates reward time and score only once while overlapping', () => {
+    const overlapping = {
+      ...createGameState(),
+      vehicle: {
+        position: { x: 4.8, z: 70 },
+        heading: 0,
+        speed: 0,
+        previousSpeed: 0
+      }
+    };
+
+    const first = updateGameState(overlapping, { throttle: 0, brake: 0, steer: 0 }, 0.05);
+    const second = updateGameState(first, { throttle: 0, brake: 0, steer: 0 }, 0.05);
+
+    expect(first.remainingSeconds).toBeGreaterThan(overlapping.remainingSeconds);
+    expect(first.score).toBeGreaterThan(overlapping.score);
+    expect(second.score).toBe(first.score);
   });
 
   it('applies obstacle collision again after leaving and re-entering', () => {
@@ -128,7 +167,7 @@ describe('game state', () => {
       {
         ...createGameState(),
         vehicle: {
-          position: { x: -4.5, z: 86 },
+          position: { x: -4.5, z: 88 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -141,7 +180,7 @@ describe('game state', () => {
       {
         ...first,
         vehicle: {
-          position: { x: 0, z: 100 },
+          position: { x: 0, z: 104 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -154,7 +193,7 @@ describe('game state', () => {
       {
         ...left,
         vehicle: {
-          position: { x: -4.5, z: 86 },
+          position: { x: -4.5, z: 88 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -172,7 +211,7 @@ describe('game state', () => {
       {
         ...createGameState(),
         vehicle: {
-          position: { x: 0, z: 42 },
+          position: { x: 0, z: 28 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -185,7 +224,7 @@ describe('game state', () => {
       {
         ...first,
         vehicle: {
-          position: { x: 0, z: 55 },
+          position: { x: 0, z: 42 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -198,7 +237,7 @@ describe('game state', () => {
       {
         ...left,
         vehicle: {
-          position: { x: 0, z: 42 },
+          position: { x: 0, z: 28 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -216,7 +255,7 @@ describe('game state', () => {
       const overlapping = {
         ...createGameState(),
         vehicle: {
-          position: { x: 0, z: 42 },
+          position: { x: 0, z: 28 },
           heading: 0,
           speed: 0,
           previousSpeed: 0
@@ -240,7 +279,7 @@ describe('game state', () => {
       const overlapping = {
         ...createGameState(),
         vehicle: {
-          position: { x: -4.5, z: 86 },
+          position: { x: -4.5, z: 88 },
           heading: 0,
           speed: 0,
           previousSpeed: 0

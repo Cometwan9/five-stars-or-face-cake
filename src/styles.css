@@ -65,9 +65,9 @@ p {
   top: 18px;
   left: 18px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(82px, 1fr));
+  grid-template-columns: repeat(5, minmax(82px, 1fr));
   gap: 8px;
-  width: min(520px, calc(100vw - 36px));
+  width: min(650px, calc(100vw - 36px));
   color: #121625;
   font-family: "Trebuchet MS", Inter, ui-sans-serif, system-ui, sans-serif;
   text-transform: uppercase;

@@ -20,6 +20,7 @@ export type CakeImpulse = {
   collision: number;
   speed: number;
   wind?: number;
+  traction?: number;
 };
 
 const MAX_TILT = 1.35;
@@ -45,7 +46,8 @@ export function updateCakePhysics(
   const bump = Math.max(0, impulse.bump);
   const collision = Math.max(0, impulse.collision);
   const speedRisk = Math.min(1.8, Math.abs(impulse.speed) / 10);
-  const steeringForce = impulse.steering * speedRisk * 2.4;
+  const traction = finiteClamp(impulse.traction ?? 1, 0.65, 2.2);
+  const steeringForce = impulse.steering * speedRisk * 2.4 * traction;
   const windForce = finiteClamp(impulse.wind ?? 0, -1, 1) * (0.55 + speedRisk * 0.18);
   const accelerationForce = -impulse.acceleration * 0.6;
   const shock = bump * (0.55 + speedRisk * 0.42) + collision * 1.8;
@@ -54,7 +56,14 @@ export function updateCakePhysics(
   const wobbleZ = cake.wobbleZ + (accelerationForce + shock * 0.7) * deltaSeconds;
 
   const damping = Math.max(0, 1 - 3.2 * deltaSeconds);
-  const recovery = Math.max(0, 1 - 1.25 * deltaSeconds);
+  const calmness =
+    Math.abs(impulse.steering) < 0.08 &&
+    Math.abs(impulse.acceleration) < 1.5 &&
+    shock < 0.05 &&
+    speedRisk < 0.85
+      ? 1
+      : 0;
+  const recovery = Math.max(0, 1 - (1.25 + calmness * 1.55) * deltaSeconds);
 
   const nextTiltX = clamp((cake.tiltX + wobbleX * deltaSeconds) * recovery, -MAX_TILT, MAX_TILT);
   const nextTiltZ = clamp((cake.tiltZ + wobbleZ * deltaSeconds) * recovery, -MAX_TILT, MAX_TILT);
@@ -71,7 +80,7 @@ export function updateCakePhysics(
     tiltZ: nextTiltZ,
     wobbleX: wobbleX * damping,
     wobbleZ: wobbleZ * damping,
-    stability: clamp(cake.stability - damage, 0, 100)
+    stability: clamp(cake.stability - damage + calmness * 2.6 * deltaSeconds, 0, 100)
   };
 }
 
