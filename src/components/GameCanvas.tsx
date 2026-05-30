@@ -3,12 +3,15 @@ import type { GameState } from '../game/gameState';
 import { RiderView } from './RiderView';
 import { World } from './World';
 
+export type CameraMode = 'first' | 'third';
+
 type GameCanvasProps = {
   state: GameState;
+  cameraMode: CameraMode;
   onCustomerInteract: () => void;
 };
 
-export function GameCanvas({ state, onCustomerInteract }: GameCanvasProps) {
+export function GameCanvas({ state, cameraMode, onCustomerInteract }: GameCanvasProps) {
   return (
     <Canvas
       camera={{ position: [0, 1.55, -3.65], rotation: [-0.16, Math.PI, 0], fov: 78 }}
@@ -23,12 +26,12 @@ export function GameCanvas({ state, onCustomerInteract }: GameCanvasProps) {
       <pointLight position={[0, 2.2, 2.5]} intensity={0.85} color="#3dffe0" />
       <World state={state} onCustomerInteract={onCustomerInteract} />
       <RiderView state={state} />
-      <FollowCamera state={state} />
+      <FollowCamera state={state} cameraMode={cameraMode} />
     </Canvas>
   );
 }
 
-function FollowCamera({ state }: Pick<GameCanvasProps, 'state'>) {
+function FollowCamera({ state, cameraMode }: Pick<GameCanvasProps, 'state' | 'cameraMode'>) {
   const { camera } = useThree();
 
   useFrame(({ clock }) => {
@@ -43,12 +46,22 @@ function FollowCamera({ state }: Pick<GameCanvasProps, 'state'>) {
     const shakeX = Math.sin(pulse) * shake;
     const shakeY = Math.cos(pulse * 0.73) * shake * 0.65;
 
+    if (cameraMode === 'first') {
+      camera.position.set(
+        position.x - forwardX * 0.55 + shakeX * 0.7,
+        1.18 + shakeY,
+        position.z - forwardZ * 0.88
+      );
+      camera.lookAt(position.x + forwardX * 8.5, 0.52 + shakeY * 0.35, position.z + forwardZ * 8.5);
+      return;
+    }
+
     camera.position.set(
-      position.x - forwardX * 3.55 + shakeX,
-      1.42 + shakeY,
-      position.z - forwardZ * 3.55
+      position.x - forwardX * 5.15 + shakeX,
+      2.65 + shakeY,
+      position.z - forwardZ * 6.2
     );
-    camera.lookAt(position.x + forwardX * 8.8, 0.5 + shakeY * 0.4, position.z + forwardZ * 8.8);
+    camera.lookAt(position.x + forwardX * 5.8, 0.72 + shakeY * 0.4, position.z + forwardZ * 5.8);
   });
 
   return null;

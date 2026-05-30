@@ -11,13 +11,16 @@ export function Hud({ state }: HudProps) {
   const urgent = state.remainingSeconds < 18 || tilt > 0.72;
   const speedKmh = Math.round(state.vehicle.speed * 3.6);
   const speedNeedle = Math.max(-126, Math.min(126, -126 + speedKmh * 4.2));
+  const timeLabel = state.remainingSeconds >= 0
+    ? `${Math.ceil(state.remainingSeconds)}s`
+    : `超时 ${Math.ceil(Math.abs(state.remainingSeconds))}s`;
 
   return (
     <>
       <div className={`hud ${urgent ? 'hud-urgent' : ''}`} role="status" aria-label="Delivery status">
         <div>
           <span>Time</span>
-          <strong>{Math.ceil(state.remainingSeconds)}s</strong>
+          <strong>{timeLabel}</strong>
         </div>
         <div>
           <span>Speed</span>

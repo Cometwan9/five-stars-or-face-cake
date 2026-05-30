@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { GameCanvas } from './components/GameCanvas';
+import { GameCanvas, type CameraMode } from './components/GameCanvas';
 import { Hud } from './components/Hud';
 import { ResultOverlay } from './components/ResultOverlay';
 import { completeDelivery, createGameState, updateGameState, type GameState } from './game/gameState';
@@ -9,10 +9,14 @@ const FRAME_SECONDS = 1 / 60;
 
 export default function App() {
   const [state, setState] = useState<GameState>(() => createGameState());
+  const [cameraMode, setCameraMode] = useState<CameraMode>('third');
   const keys = useRef(new Set<string>());
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === ' ') {
+        event.preventDefault();
+      }
       if (event.key.toLowerCase() === 'r') {
         setState(createGameState());
         return;
@@ -61,10 +65,21 @@ export default function App() {
 
   return (
     <main className="app-shell">
-      <GameCanvas state={state} onCustomerInteract={() => setState((current) => completeDelivery(current))} />
+      <GameCanvas
+        state={state}
+        cameraMode={cameraMode}
+        onCustomerInteract={() => setState((current) => completeDelivery(current))}
+      />
       <Hud state={state} />
+      <button
+        className="view-toggle"
+        type="button"
+        onClick={() => setCameraMode((current) => (current === 'first' ? 'third' : 'first'))}
+      >
+        {cameraMode === 'first' ? '第三人称' : '第一人称'}
+      </button>
       <div className="control-hint">
-        {state.phase === 'handoff' ? 'Click customer to deliver · R restart' : 'W/S drive · A/D steer · R restart'}
+        {state.phase === 'handoff' ? 'Click customer to deliver · R restart' : 'W/↑ drive · Space boost · A/D dodge · R restart'}
       </div>
       <ResultOverlay state={state} onRestart={() => setState(createGameState())} />
     </main>
@@ -74,7 +89,7 @@ export default function App() {
 function readInput(keys: Set<string>): VehicleInput {
   return {
     throttle: keys.has('w') || keys.has('arrowup') ? 1 : 0,
-    brake: keys.has('s') || keys.has('arrowdown') ? 1 : 0,
+    boost: keys.has(' ') || keys.has('spacebar') ? 1 : 0,
     steer:
       (keys.has('d') || keys.has('arrowright') ? 1 : 0) -
       (keys.has('a') || keys.has('arrowleft') ? 1 : 0)

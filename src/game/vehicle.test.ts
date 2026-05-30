@@ -8,24 +8,24 @@ import {
 
 describe('vehicle movement', () => {
   it('accelerates forward with throttle', () => {
-    const vehicle = updateVehicle(createVehicleState(), { throttle: 1, brake: 0, steer: 0 }, 1);
+    const vehicle = updateVehicle(createVehicleState(), { throttle: 1, boost: 0, steer: 0 }, 1);
 
     expect(vehicle.speed).toBeGreaterThan(0);
     expect(vehicle.position.z).toBeGreaterThan(0);
   });
 
-  it('brakes from forward motion', () => {
-    const moving = updateVehicle(createVehicleState(), { throttle: 1, brake: 0, steer: 0 }, 1);
-    const braking = updateVehicle(moving, { throttle: 0, brake: 1, steer: 0 }, 0.5);
+  it('boosts past normal throttle speed', () => {
+    const moving = updateVehicle(createVehicleState(), { throttle: 1, boost: 0, steer: 0 }, 1);
+    const boosting = updateVehicle(moving, { throttle: 1, boost: 1, steer: 0 }, 0.5);
 
-    expect(braking.speed).toBeLessThan(moving.speed);
+    expect(boosting.speed).toBeGreaterThan(moving.speed);
   });
 
   it('turns more sharply at speed than when stopped', () => {
-    const stopped = updateVehicle(createVehicleState(), { throttle: 0, brake: 0, steer: 1 }, 0.5);
+    const stopped = updateVehicle(createVehicleState(), { throttle: 0, boost: 0, steer: 1 }, 0.5);
     const moving = updateVehicle(
-      updateVehicle(createVehicleState(), { throttle: 1, brake: 0, steer: 0 }, 1),
-      { throttle: 0, brake: 0, steer: 1 },
+      updateVehicle(createVehicleState(), { throttle: 1, boost: 0, steer: 0 }, 1),
+      { throttle: 0, boost: 0, steer: 1 },
       0.5
     );
 
@@ -35,46 +35,40 @@ describe('vehicle movement', () => {
   it('coasting drag stops at zero without sign flip', () => {
     const forward = updateVehicle(
       { ...createVehicleState(), speed: 0.5, previousSpeed: 1 },
-      { throttle: 0, brake: 0, steer: 0 },
-      1
-    );
-    const reverse = updateVehicle(
-      { ...createVehicleState(), speed: -0.5, previousSpeed: -1 },
-      { throttle: 0, brake: 0, steer: 0 },
+      { throttle: 0, boost: 0, steer: 0 },
       1
     );
 
     expect(forward.speed).toBe(0);
-    expect(reverse.speed).toBe(0);
   });
 
   it('returns unchanged state for nonpositive deltaSeconds', () => {
-    const state = updateVehicle(createVehicleState(), { throttle: 1, brake: 0, steer: 0 }, 1);
+    const state = updateVehicle(createVehicleState(), { throttle: 1, boost: 0, steer: 0 }, 1);
 
-    expect(updateVehicle(state, { throttle: 1, brake: 1, steer: 1 }, 0)).toBe(state);
-    expect(updateVehicle(state, { throttle: 1, brake: 1, steer: 1 }, -1)).toBe(state);
+    expect(updateVehicle(state, { throttle: 1, boost: 1, steer: 1 }, 0)).toBe(state);
+    expect(updateVehicle(state, { throttle: 1, boost: 1, steer: 1 }, -1)).toBe(state);
   });
 
-  it('clamps speed at max forward and reverse limits', () => {
+  it('clamps speed at normal and boost limits', () => {
     const fastForward = updateVehicle(
       { ...createVehicleState(), speed: 17.5 },
-      { throttle: 1, brake: 0, steer: 0 },
+      { throttle: 1, boost: 0, steer: 0 },
       1
     );
-    const fastReverse = updateVehicle(
-      { ...createVehicleState(), speed: -2.5 },
-      { throttle: 0, brake: 1, steer: 0 },
+    const boosted = updateVehicle(
+      { ...createVehicleState(), speed: 23.5 },
+      { throttle: 1, boost: 1, steer: 0 },
       1
     );
 
-    expect(fastForward.speed).toBe(18);
-    expect(fastReverse.speed).toBe(-3);
+    expect(fastForward.speed).toBe(17.2);
+    expect(boosted.speed).toBe(24);
   });
 
   it('clamps input values to bounded movement behavior', () => {
-    const vehicle = updateVehicle(createVehicleState(), { throttle: 20, brake: -20, steer: 20 }, 1);
+    const vehicle = updateVehicle(createVehicleState(), { throttle: 20, boost: -20, steer: 20 }, 1);
 
-    expect(vehicle.speed).toBe(8.5);
+    expect(vehicle.speed).toBe(7.2);
     expect(vehicle.heading).toBe(1.55);
     expect(Number.isFinite(vehicle.position.x)).toBe(true);
     expect(Number.isFinite(vehicle.position.z)).toBe(true);

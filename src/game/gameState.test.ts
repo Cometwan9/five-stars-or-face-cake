@@ -3,7 +3,7 @@ import { completeDelivery, createGameState, updateGameState } from './gameState'
 
 describe('game state', () => {
   it('counts down while running', () => {
-    const state = updateGameState(createGameState(), { throttle: 0, brake: 0, steer: 0 }, 1);
+    const state = updateGameState(createGameState(), { throttle: 0, boost: 0, steer: 0 }, 1);
 
     expect(state.remainingSeconds).toBe(59);
     expect(state.phase).toBe('running');
@@ -11,7 +11,7 @@ describe('game state', () => {
 
   it('starts with visible wind data and updates wind while running', () => {
     const initial = createGameState();
-    const next = updateGameState(initial, { throttle: 0, brake: 0, steer: 0 }, 1);
+    const next = updateGameState(initial, { throttle: 0, boost: 0, steer: 0 }, 1);
 
     expect(initial.score).toBe(0);
     expect(initial.wind.speed).toBeGreaterThan(0);
@@ -23,7 +23,7 @@ describe('game state', () => {
     let state = createGameState();
 
     for (let i = 0; i < 90; i += 1) {
-      state = updateGameState(state, { throttle: 0, brake: 0, steer: 0 }, 1 / 60);
+      state = updateGameState(state, { throttle: 0, boost: 0, steer: 0 }, 1 / 60);
     }
 
     expect(Math.abs(state.cake.tiltX)).toBeGreaterThan(0);
@@ -32,10 +32,11 @@ describe('game state', () => {
   it('waits for customer handoff when reaching the destination', () => {
     let state = createGameState();
     for (let i = 0; i < 3600 && state.phase === 'running'; i += 1) {
-      state = updateGameState(state, { throttle: 1, brake: 0, steer: 0 }, 1 / 60);
+      state = updateGameState(state, { throttle: 1, boost: 0, steer: 0 }, 1 / 60);
     }
 
     expect(state.phase).toBe('handoff');
+    expect(state.remainingSeconds).toBeGreaterThan(0);
     expect(state.rating).toBeUndefined();
     const delivered = completeDelivery(state);
     expect(delivered.phase).toBe('finished');
@@ -57,7 +58,7 @@ describe('game state', () => {
           stability: 5
         }
       },
-      { throttle: 1, brake: 0, steer: 1 },
+      { throttle: 1, boost: 0, steer: 1 },
       1 / 20
     );
 
@@ -66,26 +67,38 @@ describe('game state', () => {
   });
 
   it('counts down large deltas without applying the whole spike to physics', () => {
-    const state = updateGameState(createGameState(), { throttle: 1, brake: 0, steer: 1 }, 2);
+    const state = updateGameState(createGameState(), { throttle: 1, boost: 0, steer: 1 }, 2);
 
     expect(state.remainingSeconds).toBe(58);
     expect(state.vehicle.position.z).toBeLessThan(0.1);
     expect(state.cake.stability).toBeGreaterThan(95);
   });
 
-  it('fails timed-out orders with a complaint rating', () => {
+  it('keeps timed-out orders running until the customer handoff', () => {
     const state = updateGameState(
       {
         ...createGameState(),
         remainingSeconds: 0.01
       },
-      { throttle: 0, brake: 0, steer: 0 },
+      { throttle: 0, boost: 0, steer: 0 },
       1 / 60
     );
 
-    expect(state.phase).toBe('failed');
-    expect(state.rating?.stars).toBe(1);
-    expect(state.rating?.faceCake).toBe(false);
+    expect(state.phase).toBe('running');
+    expect(state.remainingSeconds).toBeLessThan(0);
+    expect(state.rating).toBeUndefined();
+  });
+
+  it('rates overtime handoffs as complaints after delivery', () => {
+    const delivered = completeDelivery({
+      ...createGameState(),
+      phase: 'handoff',
+      remainingSeconds: -3
+    });
+
+    expect(delivered.phase).toBe('finished');
+    expect(delivered.rating?.stars).toBe(1);
+    expect(delivered.rating?.faceCake).toBe(false);
   });
 
   it('leaves terminal states unchanged by identity', () => {
@@ -98,8 +111,8 @@ describe('game state', () => {
       phase: 'failed' as const
     };
 
-    expect(updateGameState(finished, { throttle: 1, brake: 1, steer: 1 }, 1)).toBe(finished);
-    expect(updateGameState(failed, { throttle: 1, brake: 1, steer: 1 }, 1)).toBe(failed);
+    expect(updateGameState(finished, { throttle: 1, boost: 1, steer: 1 }, 1)).toBe(finished);
+    expect(updateGameState(failed, { throttle: 1, boost: 1, steer: 1 }, 1)).toBe(failed);
   });
 
   it('keeps handoff state still until the customer is clicked', () => {
@@ -108,13 +121,13 @@ describe('game state', () => {
       phase: 'handoff' as const
     };
 
-    expect(updateGameState(handoff, { throttle: 1, brake: 0, steer: 1 }, 1)).toBe(handoff);
+    expect(updateGameState(handoff, { throttle: 1, boost: 0, steer: 1 }, 1)).toBe(handoff);
     expect(completeDelivery(handoff).rating).toBeDefined();
   });
 
   it('clamps raw overlarge vehicle input before vehicle and cake integration', () => {
-    const raw = updateGameState(createGameState(), { throttle: 20, brake: -20, steer: 20 }, 0.1);
-    const clamped = updateGameState(createGameState(), { throttle: 1, brake: 0, steer: 1 }, 0.1);
+    const raw = updateGameState(createGameState(), { throttle: 20, boost: -20, steer: 20 }, 0.1);
+    const clamped = updateGameState(createGameState(), { throttle: 1, boost: 0, steer: 1 }, 0.1);
 
     expect(raw.vehicle).toEqual(clamped.vehicle);
     expect(raw.cake).toEqual(clamped.cake);
@@ -122,7 +135,7 @@ describe('game state', () => {
 
   it('treats non-finite deltas as zero without poisoning state', () => {
     for (const deltaSeconds of [Number.NaN, Infinity, -Infinity]) {
-      const state = updateGameState(createGameState(), { throttle: 1, brake: 0, steer: 1 }, deltaSeconds);
+      const state = updateGameState(createGameState(), { throttle: 1, boost: 0, steer: 1 }, deltaSeconds);
 
       expect(state.remainingSeconds).toBe(60);
       expect(Number.isFinite(state.vehicle.position.x)).toBe(true);
@@ -145,8 +158,8 @@ describe('game state', () => {
       }
     };
 
-    const first = updateGameState(overlapping, { throttle: 0, brake: 0, steer: 0 }, 0.05);
-    const second = updateGameState(first, { throttle: 0, brake: 0, steer: 0 }, 0.05);
+    const first = updateGameState(overlapping, { throttle: 0, boost: 0, steer: 0 }, 0.05);
+    const second = updateGameState(first, { throttle: 0, boost: 0, steer: 0 }, 0.05);
 
     expect(first.cake.stability).toBeLessThan(overlapping.cake.stability);
     expect(second.cake.stability).toBeGreaterThanOrEqual(first.cake.stability);
@@ -165,7 +178,7 @@ describe('game state', () => {
       }
     };
 
-    const hit = updateGameState(overlapping, { throttle: 0, brake: 0, steer: 0 }, 0.05);
+    const hit = updateGameState(overlapping, { throttle: 0, boost: 0, steer: 0 }, 0.05);
 
     expect(hit.vehicle.speed).toBeLessThan(overlapping.vehicle.speed);
     expect(hit.score).toBeLessThan(overlapping.score);
@@ -182,8 +195,8 @@ describe('game state', () => {
       }
     };
 
-    const first = updateGameState(overlapping, { throttle: 0, brake: 0, steer: 0 }, 0.05);
-    const second = updateGameState(first, { throttle: 0, brake: 0, steer: 0 }, 0.05);
+    const first = updateGameState(overlapping, { throttle: 0, boost: 0, steer: 0 }, 0.05);
+    const second = updateGameState(first, { throttle: 0, boost: 0, steer: 0 }, 0.05);
 
     expect(first.remainingSeconds).toBeGreaterThan(overlapping.remainingSeconds);
     expect(first.score).toBeGreaterThan(overlapping.score);
@@ -203,8 +216,8 @@ describe('game state', () => {
       }
     };
 
-    const first = updateGameState(crossing, { throttle: 0, brake: 0, steer: 0 }, 0.05);
-    const second = updateGameState(first, { throttle: 0, brake: 0, steer: 0 }, 0.05);
+    const first = updateGameState(crossing, { throttle: 0, boost: 0, steer: 0 }, 0.05);
+    const second = updateGameState(first, { throttle: 0, boost: 0, steer: 0 }, 0.05);
 
     expect(first.remainingSeconds).toBeLessThan(crossing.remainingSeconds);
     expect(first.score).toBeLessThan(crossing.score);
@@ -222,7 +235,7 @@ describe('game state', () => {
           previousSpeed: 0
         }
       },
-      { throttle: 0, brake: 0, steer: 0 },
+      { throttle: 0, boost: 0, steer: 0 },
       0.05
     );
     const left = updateGameState(
@@ -235,7 +248,7 @@ describe('game state', () => {
           previousSpeed: 0
         }
       },
-      { throttle: 0, brake: 0, steer: 0 },
+      { throttle: 0, boost: 0, steer: 0 },
       0.05
     );
     const reentered = updateGameState(
@@ -248,7 +261,7 @@ describe('game state', () => {
           previousSpeed: 0
         }
       },
-      { throttle: 0, brake: 0, steer: 0 },
+      { throttle: 0, boost: 0, steer: 0 },
       0.05
     );
 
@@ -266,7 +279,7 @@ describe('game state', () => {
           previousSpeed: 0
         }
       },
-      { throttle: 0, brake: 0, steer: 0 },
+      { throttle: 0, boost: 0, steer: 0 },
       0.05
     );
     const left = updateGameState(
@@ -279,7 +292,7 @@ describe('game state', () => {
           previousSpeed: 0
         }
       },
-      { throttle: 0, brake: 0, steer: 0 },
+      { throttle: 0, boost: 0, steer: 0 },
       0.05
     );
     const reentered = updateGameState(
@@ -292,7 +305,7 @@ describe('game state', () => {
           previousSpeed: 0
         }
       },
-      { throttle: 0, brake: 0, steer: 0 },
+      { throttle: 0, boost: 0, steer: 0 },
       0.05
     );
 
@@ -313,10 +326,10 @@ describe('game state', () => {
 
       const noElapsed = updateGameState(
         overlapping,
-        { throttle: 0, brake: 0, steer: 0 },
+        { throttle: 0, boost: 0, steer: 0 },
         deltaSeconds
       );
-      const later = updateGameState(noElapsed, { throttle: 0, brake: 0, steer: 0 }, 0.05);
+      const later = updateGameState(noElapsed, { throttle: 0, boost: 0, steer: 0 }, 0.05);
 
       expect(noElapsed.lastBumpId).toBeUndefined();
       expect(later.cake.stability).toBeLessThan(noElapsed.cake.stability);
@@ -337,10 +350,10 @@ describe('game state', () => {
 
       const noElapsed = updateGameState(
         overlapping,
-        { throttle: 0, brake: 0, steer: 0 },
+        { throttle: 0, boost: 0, steer: 0 },
         deltaSeconds
       );
-      const later = updateGameState(noElapsed, { throttle: 0, brake: 0, steer: 0 }, 0.05);
+      const later = updateGameState(noElapsed, { throttle: 0, boost: 0, steer: 0 }, 0.05);
 
       expect(noElapsed.lastObstacleId).toBeUndefined();
       expect(later.cake.stability).toBeLessThan(noElapsed.cake.stability);

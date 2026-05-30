@@ -7,14 +7,15 @@ export type VehicleState = {
 
 export type VehicleInput = {
   throttle: number;
-  brake: number;
+  boost: number;
   steer: number;
 };
 
-const MAX_SPEED = 18;
-const ACCELERATION = 8.5;
-const BRAKING = 14;
-const DRAG = 1.8;
+const MAX_SPEED = 17.2;
+const BOOST_SPEED = 24;
+const ACCELERATION = 7.2;
+const BOOST_ACCELERATION = 13.5;
+const DRAG = 1.35;
 const TURN_RATE = 1.55;
 
 export function createVehicleState(): VehicleState {
@@ -34,15 +35,16 @@ export function updateVehicle(
   if (deltaSeconds <= 0) return state;
 
   const throttle = clamp(input.throttle, 0, 1);
-  const brake = clamp(input.brake, 0, 1);
+  const boost = clamp(input.boost, 0, 1);
   const steer = clamp(input.steer, -1, 1);
 
-  const acceleration = throttle * ACCELERATION - brake * BRAKING - Math.sign(state.speed) * DRAG;
+  const acceleration = throttle * ACCELERATION + boost * BOOST_ACCELERATION - Math.sign(state.speed) * DRAG;
   const nextSpeed = state.speed + acceleration * deltaSeconds;
+  const maxSpeed = boost > 0 ? BOOST_SPEED : MAX_SPEED;
   const speed =
-    throttle === 0 && brake === 0 && Math.sign(nextSpeed) !== Math.sign(state.speed)
+    throttle === 0 && boost === 0 && Math.sign(nextSpeed) !== Math.sign(state.speed)
       ? 0
-      : clamp(nextSpeed, -3, MAX_SPEED);
+      : clamp(nextSpeed, 0, maxSpeed);
   const speedTurnFactor = Math.min(1, Math.abs(speed) / 7);
   const heading = state.heading + steer * TURN_RATE * speedTurnFactor * deltaSeconds;
 

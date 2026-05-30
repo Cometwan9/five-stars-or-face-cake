@@ -120,23 +120,6 @@ export function updateGameState(
     };
   }
 
-  if (remainingSeconds <= 0) {
-    return {
-      ...state,
-      phase: 'failed',
-      remainingSeconds,
-      score,
-      vehicle,
-      cake,
-      wind,
-      lastFeatureIds,
-      lastSignalId: signalViolation.id,
-      lastBumpId: bump?.id,
-      lastObstacleId: obstacle?.id,
-      rating: calculateRating({ remainingSeconds, condition })
-    };
-  }
-
   if (destination) {
     return {
       ...state,
@@ -260,14 +243,19 @@ function applyRoadblockStickiness(
 ): VehicleState {
   if (!roadblock) return vehicle;
 
-  const tryingToBackOut = input.brake > 0 && input.throttle === 0;
-  if (tryingToBackOut) return vehicle;
+  const rammingThrough = input.boost > 0 && vehicle.speed > 8;
+  if (rammingThrough) {
+    return {
+      ...vehicle,
+      speed: Math.max(vehicle.speed * 0.54, 5.5),
+      previousSpeed: previousVehicle.speed
+    };
+  }
 
   return {
     ...vehicle,
-    position: previousVehicle.position,
-    speed: 0,
-    previousSpeed: 0
+    speed: Math.min(vehicle.speed, Math.max(2.8, previousVehicle.speed * 0.32)),
+    previousSpeed: previousVehicle.speed
   };
 }
 
@@ -286,7 +274,7 @@ function createWindState(elapsedRunSeconds: number): WindState {
 function sanitizeInput(input: VehicleInput): VehicleInput {
   return {
     throttle: finiteClamp(input.throttle, 0, 1),
-    brake: finiteClamp(input.brake, 0, 1),
+    boost: finiteClamp(input.boost, 0, 1),
     steer: finiteClamp(input.steer, -1, 1)
   };
 }
