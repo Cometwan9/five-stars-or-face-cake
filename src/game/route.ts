@@ -25,10 +25,10 @@ export const ROUTE_LENGTH = 360;
 
 export const ROUTE_FEATURES: readonly RouteFeature[] = [
   createFeature('speed-bump-1', 'speedBump', { x: 0, z: 30 }, 4.5, {
-    bump: 0.34,
-    time: -0.15,
+    bump: 0.95,
+    time: -0.35,
     score: 15,
-    speedMultiplier: 0.95
+    speedMultiplier: 0.78
   }),
   createFeature('oil-slick-1', 'oilSlick', { x: -3.4, z: 54 }, 4.2, {
     bump: 0.06,
@@ -43,10 +43,11 @@ export const ROUTE_FEATURES: readonly RouteFeature[] = [
     speedMultiplier: 1.03
   }),
   createFeature('roadblock-1', 'roadblock', { x: -4.5, z: 102 }, 3.2, {
-    collision: 0.65,
-    time: -1.25,
-    score: -100,
-    speedMultiplier: 0.48
+    bump: 0.45,
+    collision: 1.65,
+    time: -2.25,
+    score: -220,
+    speedMultiplier: 0.3
   }),
   createFeature('wind-tunnel-1', 'windTunnel', { x: 0, z: 126 }, 5.2, {
     bump: 0.08,
@@ -57,16 +58,16 @@ export const ROUTE_FEATURES: readonly RouteFeature[] = [
     speedMultiplier: 1.04
   }),
   createFeature('pothole-1', 'pothole', { x: 5, z: 156 }, 3.8, {
-    bump: 0.72,
-    time: -0.65,
-    score: -55,
-    speedMultiplier: 0.82
+    bump: 1.8,
+    time: -1.15,
+    score: -120,
+    speedMultiplier: 0.62
   }),
   createFeature('speed-bump-2', 'speedBump', { x: -2.8, z: 188 }, 4.2, {
-    bump: 0.32,
-    time: -0.15,
+    bump: 0.9,
+    time: -0.35,
     score: 15,
-    speedMultiplier: 0.95
+    speedMultiplier: 0.78
   }),
   createFeature('time-gate-2', 'timeGate', { x: -4.8, z: 216 }, 3.5, {
     time: 2,
@@ -74,10 +75,11 @@ export const ROUTE_FEATURES: readonly RouteFeature[] = [
     speedMultiplier: 1.02
   }),
   createFeature('roadblock-2', 'roadblock', { x: 3.8, z: 244 }, 3.2, {
-    collision: 0.62,
-    time: -1,
-    score: -90,
-    speedMultiplier: 0.52
+    bump: 0.4,
+    collision: 1.55,
+    time: -2,
+    score: -200,
+    speedMultiplier: 0.34
   }),
   createFeature('oil-slick-2', 'oilSlick', { x: 3.2, z: 274 }, 4.2, {
     bump: 0.06,
@@ -95,10 +97,10 @@ export const ROUTE_FEATURES: readonly RouteFeature[] = [
     speedMultiplier: 1.04
   }),
   createFeature('pothole-2', 'pothole', { x: -4.8, z: 328 }, 3.8, {
-    bump: 0.68,
-    time: -0.6,
-    score: -50,
-    speedMultiplier: 0.84
+    bump: 1.65,
+    time: -1,
+    score: -110,
+    speedMultiplier: 0.66
   }),
   createFeature('customer-door', 'destination', { x: 0, z: ROUTE_LENGTH }, 9, {
     score: 500

@@ -27,6 +27,7 @@ export type GameState = {
   lastSignalId?: string;
   lastBumpId?: string;
   lastObstacleId?: string;
+  lastHazardText?: string;
   rating?: RatingResult;
 };
 
@@ -102,6 +103,7 @@ export function updateGameState(
   );
   const condition = getCakeCondition(cake);
   const lastFeatureIds = features.map((feature) => feature.id);
+  const lastHazardText = getHazardText(newlyHitFeatures[0], signalViolation);
 
   if (condition === 'faceCake') {
     return {
@@ -116,14 +118,17 @@ export function updateGameState(
       lastSignalId: signalViolation.id,
       lastBumpId: bump?.id,
       lastObstacleId: obstacle?.id,
+      lastHazardText,
       rating: calculateRating({ remainingSeconds, condition })
     };
   }
 
   if (destination) {
+    const rating = calculateRating({ remainingSeconds, condition });
+
     return {
       ...state,
-      phase: 'handoff',
+      phase: rating.faceCake ? 'failed' : 'finished',
       remainingSeconds,
       score,
       vehicle,
@@ -132,7 +137,9 @@ export function updateGameState(
       lastFeatureIds,
       lastSignalId: signalViolation.id,
       lastBumpId: bump?.id,
-      lastObstacleId: obstacle?.id
+      lastObstacleId: obstacle?.id,
+      lastHazardText,
+      rating
     };
   }
 
@@ -146,7 +153,8 @@ export function updateGameState(
     lastFeatureIds,
     lastSignalId: signalViolation.id,
     lastBumpId: bump?.id,
-    lastObstacleId: obstacle?.id
+    lastObstacleId: obstacle?.id,
+    lastHazardText
   };
 }
 
@@ -257,6 +265,28 @@ function applyRoadblockStickiness(
     speed: Math.min(vehicle.speed, Math.max(2.8, previousVehicle.speed * 0.32)),
     previousSpeed: previousVehicle.speed
   };
+}
+
+function getHazardText(feature: RouteFeature | undefined, signalViolation: SignalViolation): string | undefined {
+  if (signalViolation.collision > 0) return '闯红灯：蛋糕剧烈晃动，顾客满意度下降';
+  if (!feature) return undefined;
+
+  switch (feature.kind) {
+    case 'speedBump':
+      return '减速带：车身弹跳，蛋糕受到冲击';
+    case 'pothole':
+      return '坑洞：蛋糕稳定度大幅下降';
+    case 'roadblock':
+      return '路障：撞击减速，蛋糕受损';
+    case 'oilSlick':
+      return '奶油地面：转向变滑，蛋糕更容易倾斜';
+    case 'windTunnel':
+      return '强风路段：侧风推歪蛋糕';
+    case 'timeGate':
+      return '时间裂缝：追回一点配送时间';
+    default:
+      return undefined;
+  }
 }
 
 function createWindState(elapsedRunSeconds: number): WindState {

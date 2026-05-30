@@ -29,18 +29,16 @@ describe('game state', () => {
     expect(Math.abs(state.cake.tiltX)).toBeGreaterThan(0);
   });
 
-  it('waits for customer handoff when reaching the destination', () => {
+  it('shows a rated result when reaching the destination', () => {
     let state = createGameState();
     for (let i = 0; i < 3600 && state.phase === 'running'; i += 1) {
       state = updateGameState(state, { throttle: 1, boost: 0, steer: 0 }, 1 / 60);
     }
 
-    expect(state.phase).toBe('handoff');
+    expect(state.phase).toBe('finished');
     expect(state.remainingSeconds).toBeGreaterThan(0);
-    expect(state.rating).toBeUndefined();
-    const delivered = completeDelivery(state);
-    expect(delivered.phase).toBe('finished');
-    expect(delivered.rating).toBeDefined();
+    expect(state.rating).toBeDefined();
+    expect(state.rating?.stars).toBeGreaterThanOrEqual(3);
   });
 
   it('fails when cake reaches face-cake condition', () => {
@@ -90,11 +88,18 @@ describe('game state', () => {
   });
 
   it('rates overtime handoffs as complaints after delivery', () => {
-    const delivered = completeDelivery({
+    let delivered = {
       ...createGameState(),
-      phase: 'handoff',
+      vehicle: {
+        position: { x: 0, z: 358 },
+        heading: 0,
+        speed: 10,
+        previousSpeed: 10
+      },
       remainingSeconds: -3
-    });
+    };
+
+    delivered = updateGameState(delivered, { throttle: 1, boost: 0, steer: 0 }, 0.2);
 
     expect(delivered.phase).toBe('finished');
     expect(delivered.rating?.stars).toBe(1);

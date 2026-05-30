@@ -8,6 +8,8 @@ export type RatingInput = {
 export type RatingResult = {
   stars: 1 | 2 | 3 | 4 | 5;
   faceCake: boolean;
+  title: string;
+  conditionLabel: string;
   comment: string;
 };
 
@@ -16,7 +18,9 @@ export function calculateRating(input: RatingInput): RatingResult {
     return {
       stars: 1,
       faceCake: true,
-      comment: 'I ordered birthday cake, not facial frosting therapy.'
+      title: '配送失败',
+      conditionLabel: '飞出盒子 / 糊脸',
+      comment: '顾客：“我点的是生日蛋糕，不是奶油糊脸服务。”'
     };
   }
 
@@ -24,7 +28,9 @@ export function calculateRating(input: RatingInput): RatingResult {
     return {
       stars: 1,
       faceCake: false,
-      comment: 'Order timed out. Complaint form printed before the door opened.'
+      title: '收到差评',
+      conditionLabel: '超时送达',
+      comment: '顾客：“超时了，蛋糕再完整也救不了这个订单。”'
     };
   }
 
@@ -32,7 +38,9 @@ export function calculateRating(input: RatingInput): RatingResult {
     return {
       stars: input.remainingSeconds >= 0 ? 2 : 1,
       faceCake: false,
-      comment: 'This cake has experienced a major geological event.'
+      title: '收到差评',
+      conditionLabel: '结构性坍塌',
+      comment: '顾客：“这蛋糕像经历过一次小型地质灾害。”'
     };
   }
 
@@ -40,7 +48,9 @@ export function calculateRating(input: RatingInput): RatingResult {
     return {
       stars: 3,
       faceCake: false,
-      comment: 'It arrived doing yoga. I respect the effort.'
+      title: '勉强收货',
+      conditionLabel: '严重倾斜',
+      comment: '顾客：“它歪得很有个性，但我今天过生日，算了。”'
     };
   }
 
@@ -48,13 +58,17 @@ export function calculateRating(input: RatingInput): RatingResult {
     return {
       stars: 4,
       faceCake: false,
-      comment: 'A little sideways, but emotionally sincere.'
+      title: '四星好评',
+      conditionLabel: '轻微倾斜',
+      comment: '顾客：“有点歪，但还活着，给你四星。”'
     };
   }
 
   return {
     stars: 5,
     faceCake: false,
-    comment: 'Perfect. I am moved. The cake is moved less.'
+    title: '五星好评',
+    conditionLabel: '完美',
+    comment: '顾客：“准时、完整、蜡烛还站着，五星。”'
   };
 }

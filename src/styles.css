@@ -175,6 +175,24 @@ p {
   animation: danger-pulse 360ms steps(2, end) infinite;
 }
 
+.hazard-flash {
+  position: absolute;
+  top: 118px;
+  left: 18px;
+  max-width: min(520px, calc(100vw - 36px));
+  padding: 10px 12px;
+  border: 3px solid #121625;
+  border-radius: 2px;
+  background: #ff3045;
+  color: #fff4bf;
+  font-family: "Trebuchet MS", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 900;
+  box-shadow: 4px 4px 0 #121625;
+  text-shadow: 1px 1px 0 #121625;
+  animation: hazard-pop 720ms steps(2, end) infinite;
+}
+
 .control-hint {
   position: absolute;
   right: 18px;
@@ -298,5 +316,11 @@ p {
   50% {
     filter: saturate(1.7);
     transform: translate(2px, 0);
+  }
+}
+
+@keyframes hazard-pop {
+  50% {
+    transform: translateY(2px);
   }
 }

@@ -44,6 +44,11 @@ export function Hud({ state }: HudProps) {
           <i style={{ width: `${Math.min(100, tilt * 100)}%` }} />
         </div>
       </div>
+      {state.lastHazardText ? (
+        <div className="hazard-flash" role="alert">
+          {state.lastHazardText}
+        </div>
+      ) : null}
       <div className="speedometer" aria-label={`Scooter speedometer ${speedKmh} kilometers per hour`}>
         <span>km/h</span>
         <i style={{ transform: `translateX(-50%) rotate(${speedNeedle}deg)` }} />

@@ -79,7 +79,7 @@ export default function App() {
         {cameraMode === 'first' ? '第三人称' : '第一人称'}
       </button>
       <div className="control-hint">
-        {state.phase === 'handoff' ? 'Click customer to deliver · R restart' : 'W/↑ drive · Space boost · A/D dodge · R restart'}
+        W/↑ drive · Space boost · A/D dodge · R restart
       </div>
       <ResultOverlay state={state} onRestart={() => setState(createGameState())} />
     </main>

@@ -84,7 +84,7 @@ describe('cake physics', () => {
     );
 
     expect(damaged.stability).toBeLessThan(94);
-    expect(getCakeCondition(damaged)).toBe('perfect');
+    expect(getCakeCondition(damaged)).not.toBe('perfect');
   });
 
   it('slowly repairs structural stability during smooth recovery', () => {

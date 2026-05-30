@@ -50,7 +50,7 @@ export function updateCakePhysics(
   const steeringForce = impulse.steering * speedRisk * 2.05 * traction;
   const windForce = finiteClamp(impulse.wind ?? 0, -1, 1) * (0.42 + speedRisk * 0.14);
   const accelerationForce = -impulse.acceleration * 0.5;
-  const shock = bump * (0.36 + speedRisk * 0.28) + collision * 1.45;
+  const shock = bump * (0.9 + speedRisk * 0.5) + collision * 2.35;
 
   const wobbleX = cake.wobbleX + (steeringForce + windForce + shock * 0.45) * deltaSeconds;
   const wobbleZ = cake.wobbleZ + (accelerationForce + shock * 0.7) * deltaSeconds;
@@ -70,9 +70,9 @@ export function updateCakePhysics(
 
   const tiltMagnitude = Math.hypot(nextTiltX, nextTiltZ);
   const damage =
-    (shock * 6.2 +
-      Math.max(0, tiltMagnitude - 0.72) * 6 +
-      Math.max(0, speedRisk - 1.1) * Math.abs(impulse.steering) * 1.8) *
+    (shock * 16 +
+      Math.max(0, tiltMagnitude - 0.58) * 12 +
+      Math.max(0, speedRisk - 1.05) * Math.abs(impulse.steering) * 4.6) *
     (deltaSeconds / DAMAGE_REFERENCE_SECONDS);
 
   return {
