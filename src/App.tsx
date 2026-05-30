@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { GameCanvas } from './components/GameCanvas';
-import { DisasterLayer } from './components/DisasterLayer';
 import { Hud } from './components/Hud';
 import { ResultOverlay } from './components/ResultOverlay';
 import { createGameState, updateGameState, type GameState } from './game/gameState';
@@ -63,7 +62,6 @@ export default function App() {
   return (
     <main className="app-shell">
       <GameCanvas state={state} />
-      <DisasterLayer state={state} />
       <Hud state={state} />
       <div className="control-hint">W/S drive · A/D steer · R restart</div>
       <ResultOverlay state={state} onRestart={() => setState(createGameState())} />
