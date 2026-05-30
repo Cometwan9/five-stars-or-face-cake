@@ -23,6 +23,12 @@ export function Hud({ state }: HudProps) {
         <span>Cake</span>
         <strong>{condition}</strong>
       </div>
+      <div>
+        <span>Wind</span>
+        <strong aria-label="Wind readout">
+          {state.wind.direction > 0 ? 'R' : 'L'} {state.wind.speed} km/h
+        </strong>
+      </div>
       <div className="tilt-meter" aria-label={`Cake tilt ${Math.round(tilt * 100)} percent`}>
         <i style={{ width: `${Math.min(100, tilt * 100)}%` }} />
       </div>

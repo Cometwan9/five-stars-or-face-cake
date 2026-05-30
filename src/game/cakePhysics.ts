@@ -19,6 +19,7 @@ export type CakeImpulse = {
   bump: number;
   collision: number;
   speed: number;
+  wind?: number;
 };
 
 const MAX_TILT = 1.35;
@@ -45,10 +46,11 @@ export function updateCakePhysics(
   const collision = Math.max(0, impulse.collision);
   const speedRisk = Math.min(1.8, Math.abs(impulse.speed) / 10);
   const steeringForce = impulse.steering * speedRisk * 2.4;
+  const windForce = finiteClamp(impulse.wind ?? 0, -1, 1) * (0.55 + speedRisk * 0.18);
   const accelerationForce = -impulse.acceleration * 0.6;
   const shock = bump * (0.55 + speedRisk * 0.42) + collision * 1.8;
 
-  const wobbleX = cake.wobbleX + (steeringForce + shock * 0.45) * deltaSeconds;
+  const wobbleX = cake.wobbleX + (steeringForce + windForce + shock * 0.45) * deltaSeconds;
   const wobbleZ = cake.wobbleZ + (accelerationForce + shock * 0.7) * deltaSeconds;
 
   const damping = Math.max(0, 1 - 3.2 * deltaSeconds);
@@ -85,4 +87,9 @@ export function getCakeCondition(cake: CakeState): CakeCondition {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function finiteClamp(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return clamp(value, min, max);
 }

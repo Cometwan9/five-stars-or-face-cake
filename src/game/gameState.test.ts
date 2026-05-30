@@ -9,6 +9,25 @@ describe('game state', () => {
     expect(state.phase).toBe('running');
   });
 
+  it('starts with visible wind data and updates wind while running', () => {
+    const initial = createGameState();
+    const next = updateGameState(initial, { throttle: 0, brake: 0, steer: 0 }, 1);
+
+    expect(initial.wind.speed).toBeGreaterThan(0);
+    expect(Math.abs(initial.wind.force)).toBeLessThanOrEqual(1);
+    expect(next.wind).not.toEqual(initial.wind);
+  });
+
+  it('lets wind push the cake sideways during smooth driving', () => {
+    let state = createGameState();
+
+    for (let i = 0; i < 90; i += 1) {
+      state = updateGameState(state, { throttle: 0, brake: 0, steer: 0 }, 1 / 60);
+    }
+
+    expect(Math.abs(state.cake.tiltX)).toBeGreaterThan(0);
+  });
+
   it('finishes when reaching the destination', () => {
     let state = createGameState();
     for (let i = 0; i < 900 && state.phase === 'running'; i += 1) {

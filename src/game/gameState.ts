@@ -21,19 +21,28 @@ export type GameState = {
   remainingSeconds: number;
   vehicle: VehicleState;
   cake: CakeState;
+  wind: WindState;
   lastBumpId?: string;
   lastObstacleId?: string;
   rating?: RatingResult;
 };
 
 const MAX_SIMULATION_DELTA_SECONDS = 0.1;
+const ORDER_SECONDS = 75;
+
+export type WindState = {
+  speed: number;
+  direction: -1 | 1;
+  force: number;
+};
 
 export function createGameState(): GameState {
   return {
     phase: 'running',
-    remainingSeconds: 75,
+    remainingSeconds: ORDER_SECONDS,
     vehicle: createVehicleState(),
-    cake: createCakeState()
+    cake: createCakeState(),
+    wind: createWindState(0)
   };
 }
 
@@ -49,6 +58,8 @@ export function updateGameState(
   const simulationDelta = Math.min(elapsedSeconds, MAX_SIMULATION_DELTA_SECONDS);
   if (simulationDelta === 0) return state;
 
+  const elapsedRunSeconds = ORDER_SECONDS - state.remainingSeconds + elapsedSeconds;
+  const wind = createWindState(elapsedRunSeconds);
   const vehicle = updateVehicle(state.vehicle, inputSafe, simulationDelta);
   const bump = getRouteFeatureHit(vehicle.position, 'bump');
   const obstacle = getRouteFeatureHit(vehicle.position, 'obstacle');
@@ -63,7 +74,8 @@ export function updateGameState(
       steering: inputSafe.steer,
       bump: bumpImpulse,
       collision: collisionImpulse,
-      speed: vehicle.speed
+      speed: vehicle.speed,
+      wind: wind.force
     },
     simulationDelta
   );
@@ -78,6 +90,7 @@ export function updateGameState(
       remainingSeconds,
       vehicle,
       cake,
+      wind,
       lastBumpId: bump?.id,
       lastObstacleId: obstacle?.id,
       rating: calculateRating({ remainingSeconds, condition })
@@ -91,6 +104,7 @@ export function updateGameState(
       remainingSeconds,
       vehicle,
       cake,
+      wind,
       lastBumpId: bump?.id,
       lastObstacleId: obstacle?.id,
       rating: calculateRating({ remainingSeconds, condition })
@@ -102,8 +116,21 @@ export function updateGameState(
     remainingSeconds,
     vehicle,
     cake,
+    wind,
     lastBumpId: bump?.id,
     lastObstacleId: obstacle?.id
+  };
+}
+
+function createWindState(elapsedRunSeconds: number): WindState {
+  const wave = Math.sin(elapsedRunSeconds * 0.42) + Math.sin(elapsedRunSeconds * 0.13 + 1.7) * 0.55;
+  const direction: -1 | 1 = wave >= 0 ? 1 : -1;
+  const speed = 10 + Math.round(Math.abs(wave) * 18);
+
+  return {
+    speed,
+    direction,
+    force: direction * Math.min(1, speed / 28)
   };
 }
 
