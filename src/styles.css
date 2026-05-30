@@ -31,7 +31,7 @@ button {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #9ed7dc;
+  background: #d7824f;
 }
 
 .loading-panel {
@@ -68,16 +68,20 @@ p {
   grid-template-columns: repeat(4, minmax(82px, 1fr));
   gap: 8px;
   width: min(520px, calc(100vw - 36px));
-  color: #17202b;
+  color: #121625;
+  font-family: "Trebuchet MS", Inter, ui-sans-serif, system-ui, sans-serif;
+  text-transform: uppercase;
 }
 
 .hud > div:not(.tilt-meter) {
   min-width: 0;
   padding: 10px 12px;
-  border: 2px solid #17202b;
-  border-radius: 8px;
-  background: rgba(255, 252, 242, 0.9);
-  box-shadow: 0 3px 0 #17202b;
+  border: 3px solid #121625;
+  border-radius: 2px;
+  background: rgba(255, 228, 94, 0.92);
+  box-shadow:
+    4px 4px 0 #121625,
+    inset -4px -4px 0 rgba(161, 85, 42, 0.35);
 }
 
 .hud span {
@@ -91,24 +95,31 @@ p {
 .hud strong {
   display: block;
   overflow: hidden;
-  font-size: clamp(0.9rem, 2vw, 1.2rem);
+  color: #e73138;
+  font-size: clamp(0.95rem, 2vw, 1.28rem);
+  text-shadow: 1px 1px 0 #fff4bf;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .tilt-meter {
   grid-column: 1 / -1;
-  height: 12px;
+  height: 15px;
   overflow: hidden;
-  border: 2px solid #17202b;
-  border-radius: 999px;
-  background: #fff8e8;
+  border: 3px solid #121625;
+  border-radius: 2px;
+  background: #151a27;
+  box-shadow: 4px 4px 0 #121625;
 }
 
 .tilt-meter i {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, #5dbb7d, #f0c44f, #d94f45);
+  background: linear-gradient(90deg, #3dff87, #ffe45e, #ff3045);
+}
+
+.hud-urgent {
+  animation: danger-pulse 360ms steps(2, end) infinite;
 }
 
 .control-hint {
@@ -116,13 +127,13 @@ p {
   right: 18px;
   bottom: 18px;
   padding: 8px 10px;
-  border: 2px solid #17202b;
-  border-radius: 8px;
-  background: rgba(255, 252, 242, 0.9);
-  color: #17202b;
+  border: 3px solid #121625;
+  border-radius: 2px;
+  background: rgba(255, 228, 94, 0.92);
+  color: #121625;
   font-size: 0.9rem;
   font-weight: 800;
-  box-shadow: 0 3px 0 #17202b;
+  box-shadow: 4px 4px 0 #121625;
 }
 
 .result-overlay {
@@ -176,5 +187,17 @@ p {
     bottom: 10px;
     left: 10px;
     text-align: center;
+  }
+}
+
+@keyframes danger-pulse {
+  0% {
+    filter: saturate(1);
+    transform: translate(0, 0);
+  }
+
+  50% {
+    filter: saturate(1.7);
+    transform: translate(2px, 0);
   }
 }

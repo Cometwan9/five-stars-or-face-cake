@@ -6,17 +6,17 @@ type WorldProps = {
 };
 
 const FAIRIES = [
-  { id: 'route-fairy', position: [-8, 1.4, 34] as const, color: '#7bdff2' },
-  { id: 'cream-fairy', position: [8.5, 1.7, 76] as const, color: '#f7aef8' },
-  { id: 'wind-fairy', position: [-9, 1.5, 132] as const, color: '#b8f2e6' }
+  { id: 'route-fairy', position: [-5.9, 1.55, 34] as const, color: '#7bdff2' },
+  { id: 'cream-fairy', position: [5.8, 1.75, 76] as const, color: '#f7aef8' },
+  { id: 'wind-fairy', position: [-5.7, 1.55, 132] as const, color: '#b8f2e6' }
 ];
 
 const BUILDINGS = Array.from({ length: 12 }, (_, index) => ({
   id: `building-${index}`,
-  x: index % 2 === 0 ? -18 - (index % 3) * 4 : 18 + (index % 3) * 4,
+  x: index % 2 === 0 ? -17 - (index % 3) * 4 : 17 + (index % 3) * 4,
   z: 18 + index * 15,
   height: 4 + (index % 4) * 1.4,
-  color: ['#ff6b6b', '#ffd166', '#3bd7b8', '#7b61ff'][index % 4]
+  color: ['#b85f43', '#d2964a', '#2e8f80', '#554a95'][index % 4]
 }));
 
 export function World({ state }: WorldProps) {
@@ -26,27 +26,31 @@ export function World({ state }: WorldProps) {
     <group>
       <mesh position={[0, 0, ROUTE_LENGTH / 2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[70, ROUTE_LENGTH + 60]} />
-        <meshStandardMaterial color="#39a852" flatShading />
+        <meshStandardMaterial color="#5c7b52" flatShading />
       </mesh>
 
       <mesh position={[0, 0.02, ROUTE_LENGTH / 2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[14, ROUTE_LENGTH + 28]} />
-        <meshStandardMaterial color="#444b5b" flatShading />
+        <planeGeometry args={[13.4, ROUTE_LENGTH + 28]} />
+        <meshStandardMaterial color="#2f3442" flatShading />
       </mesh>
 
       {[-7.5, 7.5].map((x) => (
         <mesh key={`curb-${x}`} position={[x, 0.08, ROUTE_LENGTH / 2]} castShadow>
           <boxGeometry args={[0.55, 0.18, ROUTE_LENGTH + 28]} />
-          <meshStandardMaterial color="#f5e35d" flatShading />
+          <meshStandardMaterial color="#c99038" flatShading />
         </mesh>
       ))}
 
-      {Array.from({ length: 16 }, (_, index) => (
-        <mesh key={`lane-${index}`} position={[0, 0.095, 8 + index * 12]} castShadow>
-          <boxGeometry args={[0.28, 0.035, 4.4]} />
-          <meshStandardMaterial color="#fff2a8" flatShading />
-        </mesh>
-      ))}
+      {Array.from({ length: 22 }, (_, index) => {
+        const z = (state.vehicle.position.z + 8 + index * 8) % (ROUTE_LENGTH + 26);
+
+        return (
+          <mesh key={`lane-${index}`} position={[0, 0.095, z]} castShadow>
+            <boxGeometry args={[0.32, 0.035, 4.9]} />
+            <meshStandardMaterial color="#f7e39a" emissive="#3b2a14" emissiveIntensity={0.08} flatShading />
+          </mesh>
+        );
+      })}
 
       {BUILDINGS.map((building) => (
         <group key={building.id} position={[building.x, building.height / 2, building.z]}>
@@ -67,11 +71,15 @@ export function World({ state }: WorldProps) {
             <group key={feature.id} position={[feature.position.x, 0, feature.position.z]}>
               <mesh position={[0, 3, 0]} castShadow>
                 <boxGeometry args={[8, 6, 1.2]} />
-                <meshStandardMaterial color="#ffd166" flatShading />
+                <meshStandardMaterial color="#d2964a" flatShading />
               </mesh>
               <mesh position={[0, 1.2, -0.7]} castShadow>
                 <boxGeometry args={[1.8, 2.4, 0.3]} />
                 <meshStandardMaterial color="#7a3f2c" flatShading />
+              </mesh>
+              <mesh position={[0, 6.5, -0.3]} castShadow>
+                <boxGeometry args={[5.4, 0.7, 0.3]} />
+                <meshStandardMaterial color="#ffef8a" emissive="#ffef8a" emissiveIntensity={0.16} flatShading />
               </mesh>
             </group>
           );
@@ -80,24 +88,34 @@ export function World({ state }: WorldProps) {
         if (feature.kind === 'obstacle') {
           return (
             <group key={feature.id} position={[feature.position.x, 0, feature.position.z]}>
-              <mesh position={[0, 0.65, 0]} castShadow>
-                <boxGeometry args={[4.8, 1.1, 0.28]} />
-                <meshStandardMaterial color="#fff0c2" flatShading />
+              <mesh position={[0, 1.55, 0]} castShadow>
+                <boxGeometry args={[5.5, 0.32, 0.42]} />
+                <meshStandardMaterial color="#ffef8a" flatShading />
               </mesh>
-              {[-1.6, 0, 1.6].map((x) => (
-                <mesh key={x} position={[x, 0.66, -0.02]} rotation={[0, 0, 0.62]} castShadow>
-                  <boxGeometry args={[0.38, 1.35, 0.32]} />
+              <mesh position={[0, 0.95, 0]} castShadow>
+                <boxGeometry args={[5.7, 0.32, 0.44]} />
+                <meshStandardMaterial color="#ffef8a" flatShading />
+              </mesh>
+              {[-2.55, 2.55].map((x) => (
+                <mesh key={`post-${x}`} position={[x, 0.82, 0]} castShadow>
+                  <boxGeometry args={[0.32, 1.55, 0.5]} />
                   <meshStandardMaterial color="#ff3b46" flatShading />
                 </mesh>
               ))}
-              {[-2.7, 2.7].map((x) => (
-                <group key={x} position={[x, 0, 1.8]}>
+              {[-1.75, -0.6, 0.6, 1.75].map((x, stripeIndex) => (
+                <mesh key={`stripe-${x}`} position={[x, 1.24, -0.24]} rotation={[0, 0, stripeIndex % 2 === 0 ? 0.55 : -0.55]} castShadow>
+                  <boxGeometry args={[0.32, 1.18, 0.18]} />
+                  <meshStandardMaterial color="#ff3b46" flatShading />
+                </mesh>
+              ))}
+              {[-3.2, 0, 3.2].map((x) => (
+                <group key={`cone-${x}`} position={[x, 0, 2.0]}>
                   <mesh position={[0, 0.36, 0]} castShadow>
-                    <coneGeometry args={[0.36, 0.78, 6]} />
+                    <coneGeometry args={[0.42, 0.92, 6]} />
                     <meshStandardMaterial color="#ff8c1a" flatShading />
                   </mesh>
-                  <mesh position={[0, 0.08, 0]} castShadow>
-                    <cylinderGeometry args={[0.3, 0.34, 0.08, 6]} />
+                  <mesh position={[0, 0.1, 0]} castShadow>
+                    <cylinderGeometry args={[0.38, 0.44, 0.12, 6]} />
                     <meshStandardMaterial color="#fff0c2" flatShading />
                   </mesh>
                 </group>
@@ -109,13 +127,13 @@ export function World({ state }: WorldProps) {
         return (
           <group key={feature.id} position={[feature.position.x, 0, feature.position.z]}>
             <mesh position={[0, 0.08, 0]} castShadow>
-              <boxGeometry args={[10, 0.16, 1.1]} />
-              <meshStandardMaterial color="#ffe45e" flatShading />
+              <boxGeometry args={[10.6, 0.18, 1.2]} />
+              <meshStandardMaterial color="#c99038" flatShading />
             </mesh>
             {feature.id.includes('pothole') ? (
               <mesh position={[0, 0.13, 1.25]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-                <circleGeometry args={[1.2, 9]} />
-                <meshStandardMaterial color="#1d2230" flatShading />
+                <circleGeometry args={[1.35, 8]} />
+                <meshStandardMaterial color="#121621" flatShading />
               </mesh>
             ) : null}
           </group>
@@ -140,26 +158,47 @@ export function World({ state }: WorldProps) {
             <coneGeometry args={[0.22, 0.42, 8]} />
             <meshStandardMaterial color="#653f8c" flatShading />
           </mesh>
+          <mesh position={[0, -0.86, 0]} castShadow>
+            <boxGeometry args={[1.1, 0.08, 0.16]} />
+            <meshStandardMaterial color="#151a27" flatShading />
+          </mesh>
         </group>
       ))}
 
-      {Array.from({ length: 10 }, (_, index) => {
-        const z = 18 + index * 17;
-        const x = state.wind.direction * (9 + (index % 3) * 4);
+      {Array.from({ length: 16 }, (_, index) => {
+        const z = (state.vehicle.position.z + 12 + index * 9) % (ROUTE_LENGTH + 20);
+        const x = state.wind.direction * (4.8 + (index % 3) * 1.6);
 
         return (
           <group key={`wind-${index}`} position={[x, 1.1 + (index % 4) * 0.28, z]} rotation={[0, 0, windLean]}>
             <mesh>
-              <boxGeometry args={[2.6, 0.035, 0.035]} />
-              <meshStandardMaterial color="#e8fbff" transparent opacity={0.72} flatShading />
+              <boxGeometry args={[2.8, 0.045, 0.045]} />
+              <meshStandardMaterial color="#b6fff1" transparent opacity={0.56} flatShading />
             </mesh>
             <mesh position={[state.wind.direction * 1.55, 0.14, 0]} rotation={[0, 0, -state.wind.direction * 0.7]}>
-              <boxGeometry args={[0.55, 0.035, 0.035]} />
-              <meshStandardMaterial color="#e8fbff" transparent opacity={0.72} flatShading />
+              <boxGeometry args={[0.62, 0.045, 0.045]} />
+              <meshStandardMaterial color="#b6fff1" transparent opacity={0.56} flatShading />
             </mesh>
           </group>
         );
       })}
+
+      {Array.from({ length: 5 }, (_, index) => (
+        <group key={`warning-gate-${index}`} position={[0, 0, 28 + index * 34]}>
+          <mesh position={[-6.4, 1.45, 0]} castShadow>
+            <boxGeometry args={[0.22, 2.9, 0.22]} />
+            <meshStandardMaterial color="#1b2030" flatShading />
+          </mesh>
+          <mesh position={[6.4, 1.45, 0]} castShadow>
+            <boxGeometry args={[0.22, 2.9, 0.22]} />
+            <meshStandardMaterial color="#1b2030" flatShading />
+          </mesh>
+          <mesh position={[0, 2.8, 0]} castShadow>
+            <boxGeometry args={[13, 0.18, 0.2]} />
+            <meshStandardMaterial color="#1b2030" flatShading />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }

@@ -8,9 +8,10 @@ type HudProps = {
 export function Hud({ state }: HudProps) {
   const condition = getCakeCondition(state.cake);
   const tilt = Math.hypot(state.cake.tiltX, state.cake.tiltZ);
+  const urgent = state.remainingSeconds < 18 || tilt > 0.72;
 
   return (
-    <div className="hud" role="status" aria-label="Delivery status">
+    <div className={`hud ${urgent ? 'hud-urgent' : ''}`} role="status" aria-label="Delivery status">
       <div>
         <span>Time</span>
         <strong>{Math.ceil(state.remainingSeconds)}s</strong>
