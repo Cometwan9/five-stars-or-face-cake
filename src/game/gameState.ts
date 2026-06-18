@@ -20,9 +20,12 @@ export type GameState = {
   phase: GamePhase;
   remainingSeconds: number;
   score: number;
+  shortcutsTaken: number;
+  tickets: number;
   vehicle: VehicleState;
   cake: CakeState;
   wind: WindState;
+  trafficSignal: TrafficSignalState;
   lastFeatureIds: readonly string[];
   lastSignalId?: string;
   lastBumpId?: string;
@@ -33,6 +36,12 @@ export type GameState = {
 
 const MAX_SIMULATION_DELTA_SECONDS = 0.1;
 const ORDER_SECONDS = 60;
+const MAX_OVERTIME_SECONDS = 10;
+const TRAFFIC_SIGNALS = [
+  { id: 'signal-78', z: 78 },
+  { id: 'signal-216', z: 216 },
+  { id: 'signal-304', z: 304 }
+] as const;
 
 export type WindState = {
   speed: number;
@@ -40,14 +49,25 @@ export type WindState = {
   force: number;
 };
 
+export type TrafficSignalState = {
+  id: string;
+  z: number;
+  isRed: boolean;
+  secondsRemaining: number;
+  policePresent: boolean;
+};
+
 export function createGameState(): GameState {
   return {
     phase: 'running',
     remainingSeconds: ORDER_SECONDS,
     score: 0,
+    shortcutsTaken: 0,
+    tickets: 0,
     vehicle: createVehicleState(),
     cake: createCakeState(),
     wind: createWindState(0),
+    trafficSignal: createTrafficSignalState(0, 0),
     lastFeatureIds: []
   };
 }
@@ -66,6 +86,7 @@ export function updateGameState(
 
   const elapsedRunSeconds = ORDER_SECONDS - state.remainingSeconds + elapsedSeconds;
   const wind = createWindState(elapsedRunSeconds);
+  const trafficSignal = createTrafficSignalState(elapsedRunSeconds, state.vehicle.position.z);
   const baseVehicle = updateVehicle(state.vehicle, inputSafe, simulationDelta);
   const features = getRouteFeatureHits(baseVehicle.position);
   const newlyHitFeatures = features.filter((feature) => !state.lastFeatureIds.includes(feature.id));
@@ -97,6 +118,8 @@ export function updateGameState(
   );
 
   const remainingSeconds = state.remainingSeconds - elapsedSeconds + effects.time + signalViolation.time;
+  const shortcutsTaken = state.shortcutsTaken + newlyHitFeatures.filter((feature) => feature.kind === 'timeGate').length;
+  const tickets = state.tickets + (signalViolation.ticket ? 1 : 0);
   const score = Math.max(
     0,
     state.score + effects.score + signalViolation.score + Math.max(0, vehicle.speed) * simulationDelta * 0.8
@@ -111,29 +134,56 @@ export function updateGameState(
       phase: 'failed',
       remainingSeconds,
       score,
+      shortcutsTaken,
+      tickets,
       vehicle,
       cake,
       wind,
+      trafficSignal,
       lastFeatureIds,
       lastSignalId: signalViolation.id,
       lastBumpId: bump?.id,
       lastObstacleId: obstacle?.id,
       lastHazardText,
-      rating: calculateRating({ remainingSeconds, condition })
+      rating: calculateRating({ remainingSeconds, condition, shortcutsTaken, tickets })
+    };
+  }
+
+  if (remainingSeconds <= -MAX_OVERTIME_SECONDS) {
+    return {
+      ...state,
+      phase: 'failed',
+      remainingSeconds,
+      score,
+      shortcutsTaken,
+      tickets,
+      vehicle,
+      cake,
+      wind,
+      trafficSignal,
+      lastFeatureIds,
+      lastSignalId: signalViolation.id,
+      lastBumpId: bump?.id,
+      lastObstacleId: obstacle?.id,
+      lastHazardText: '超时超过 10 秒：平台自动生成投诉单',
+      rating: calculateRating({ remainingSeconds, condition, shortcutsTaken, tickets })
     };
   }
 
   if (destination) {
-    const rating = calculateRating({ remainingSeconds, condition });
+    const rating = calculateRating({ remainingSeconds, condition, shortcutsTaken, tickets });
 
     return {
       ...state,
       phase: rating.faceCake ? 'failed' : 'finished',
       remainingSeconds,
       score,
+      shortcutsTaken,
+      tickets,
       vehicle,
       cake,
       wind,
+      trafficSignal,
       lastFeatureIds,
       lastSignalId: signalViolation.id,
       lastBumpId: bump?.id,
@@ -147,9 +197,12 @@ export function updateGameState(
     ...state,
     remainingSeconds,
     score,
+    shortcutsTaken,
+    tickets,
     vehicle,
     cake,
     wind,
+    trafficSignal,
     lastFeatureIds,
     lastSignalId: signalViolation.id,
     lastBumpId: bump?.id,
@@ -164,6 +217,7 @@ type SignalViolation = {
   collision: number;
   time: number;
   score: number;
+  ticket: boolean;
 };
 
 function getSignalViolation(
@@ -171,25 +225,23 @@ function getSignalViolation(
   elapsedRunSeconds: number,
   lastSignalId?: string
 ): SignalViolation {
-  const signal = [
-    { id: 'signal-78', z: 78 },
-    { id: 'signal-216', z: 216 },
-    { id: 'signal-304', z: 304 }
-  ].find((candidate) => Math.abs(position.z - candidate.z) <= 3.2 && Math.abs(position.x) <= 7);
+  const signal = TRAFFIC_SIGNALS.find((candidate) => Math.abs(position.z - candidate.z) <= 3.2 && Math.abs(position.x) <= 7);
 
-  if (!signal) return { bump: 0, collision: 0, time: 0, score: 0 };
+  if (!signal) return { bump: 0, collision: 0, time: 0, score: 0, ticket: false };
 
-  const isRedForForwardTraffic = elapsedRunSeconds % 12 > 4;
+  const status = getSignalTiming(signal, elapsedRunSeconds);
+  const isRedForForwardTraffic = status.isRed;
   if (!isRedForForwardTraffic || lastSignalId === signal.id) {
-    return { id: signal.id, bump: 0, collision: 0, time: 0, score: 0 };
+    return { id: signal.id, bump: 0, collision: 0, time: 0, score: 0, ticket: false };
   }
 
   return {
     id: signal.id,
-    bump: 0.35,
-    collision: 0.3,
-    time: -1.8,
-    score: -140
+    bump: status.policePresent ? 0.8 : 0.42,
+    collision: status.policePresent ? 0.55 : 0.28,
+    time: status.policePresent ? -3.2 : -1.2,
+    score: status.policePresent ? -360 : -120,
+    ticket: status.policePresent
   };
 }
 
@@ -197,7 +249,12 @@ export function completeDelivery(state: GameState): GameState {
   if (state.phase !== 'handoff') return state;
 
   const condition = getCakeCondition(state.cake);
-  const rating = calculateRating({ remainingSeconds: state.remainingSeconds, condition });
+  const rating = calculateRating({
+    remainingSeconds: state.remainingSeconds,
+    condition,
+    shortcutsTaken: state.shortcutsTaken,
+    tickets: state.tickets
+  });
 
   return {
     ...state,
@@ -268,7 +325,8 @@ function applyRoadblockStickiness(
 }
 
 function getHazardText(feature: RouteFeature | undefined, signalViolation: SignalViolation): string | undefined {
-  if (signalViolation.collision > 0) return '闯红灯：蛋糕剧烈晃动，顾客满意度下降';
+  if (signalViolation.ticket) return '闯红灯被警察看到：罚单 + 蛋糕剧烈晃动';
+  if (signalViolation.collision > 0) return '趁警察不在闯红灯：省时间，但蛋糕晃了一下';
   if (!feature) return undefined;
 
   switch (feature.kind) {
@@ -287,6 +345,34 @@ function getHazardText(feature: RouteFeature | undefined, signalViolation: Signa
     default:
       return undefined;
   }
+}
+
+function createTrafficSignalState(elapsedRunSeconds: number, vehicleZ: number): TrafficSignalState {
+  const signal = TRAFFIC_SIGNALS.find((candidate) => candidate.z >= vehicleZ - 5) ?? TRAFFIC_SIGNALS[TRAFFIC_SIGNALS.length - 1];
+  const timing = getSignalTiming(signal, elapsedRunSeconds);
+
+  return {
+    id: signal.id,
+    z: signal.z,
+    ...timing
+  };
+}
+
+function getSignalTiming(
+  signal: (typeof TRAFFIC_SIGNALS)[number],
+  elapsedRunSeconds: number
+): Omit<TrafficSignalState, 'id' | 'z'> {
+  const cycle = 12;
+  const phase = (elapsedRunSeconds + signal.z * 0.037) % cycle;
+  const isRed = phase >= 4;
+  const secondsRemaining = Math.ceil(isRed ? cycle - phase : 4 - phase);
+  const policePresent = isRed && Math.floor((elapsedRunSeconds + signal.z * 0.11) / 5) % 3 !== 1;
+
+  return {
+    isRed,
+    secondsRemaining,
+    policePresent
+  };
 }
 
 function createWindState(elapsedRunSeconds: number): WindState {

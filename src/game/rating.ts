@@ -3,10 +3,12 @@ import type { CakeCondition } from './cakePhysics';
 export type RatingInput = {
   remainingSeconds: number;
   condition: CakeCondition;
+  shortcutsTaken?: number;
+  tickets?: number;
 };
 
 export type RatingResult = {
-  stars: 1 | 2 | 3 | 4 | 5;
+  stars: 1 | 2 | 3 | 4 | 5 | 6;
   faceCake: boolean;
   title: string;
   conditionLabel: string;
@@ -30,7 +32,9 @@ export function calculateRating(input: RatingInput): RatingResult {
       faceCake: false,
       title: '收到差评',
       conditionLabel: '超时送达',
-      comment: '顾客：“超时了，蛋糕再完整也救不了这个订单。”'
+      comment: input.remainingSeconds <= -10
+        ? '顾客：“你已经超时十秒了，平台自动投诉。”'
+        : '顾客：“超时了，蛋糕再完整也救不了这个订单。”'
     };
   }
 
@@ -61,6 +65,16 @@ export function calculateRating(input: RatingInput): RatingResult {
       title: '四星好评',
       conditionLabel: '轻微倾斜',
       comment: '顾客：“有点歪，但还活着，给你四星。”'
+    };
+  }
+
+  if ((input.shortcutsTaken ?? 0) > 0 && (input.tickets ?? 0) === 0 && input.remainingSeconds >= 12) {
+    return {
+      stars: 6,
+      faceCake: false,
+      title: '隐藏结局：六星好评',
+      conditionLabel: '完美 + 抄近路',
+      comment: '顾客：“你怎么比我下单还早到？六星，别问系统怎么算。”'
     };
   }
 

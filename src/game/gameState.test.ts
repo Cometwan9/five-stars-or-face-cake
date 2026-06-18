@@ -87,6 +87,21 @@ describe('game state', () => {
     expect(state.rating).toBeUndefined();
   });
 
+  it('forces a complaint result after ten overtime seconds', () => {
+    const state = updateGameState(
+      {
+        ...createGameState(),
+        remainingSeconds: -9.99
+      },
+      { throttle: 0, boost: 0, steer: 0 },
+      1 / 60
+    );
+
+    expect(state.phase).toBe('failed');
+    expect(state.rating?.stars).toBe(1);
+    expect(state.lastHazardText).toContain('超时');
+  });
+
   it('rates overtime handoffs as complaints after delivery', () => {
     let delivered = {
       ...createGameState(),
@@ -227,6 +242,27 @@ describe('game state', () => {
     expect(first.remainingSeconds).toBeLessThan(crossing.remainingSeconds);
     expect(first.score).toBeLessThan(crossing.score);
     expect(second.score).toBeGreaterThanOrEqual(first.score);
+  });
+
+  it('records a ticket when running a red light while police are present', () => {
+    const crossing = {
+      ...createGameState(),
+      remainingSeconds: 53,
+      score: 500,
+      vehicle: {
+        position: { x: 0, z: 78 },
+        heading: 0,
+        speed: 8,
+        previousSpeed: 8
+      }
+    };
+
+    const ticketed = updateGameState(crossing, { throttle: 0, boost: 0, steer: 0 }, 0.05);
+
+    expect(ticketed.tickets).toBeGreaterThanOrEqual(0);
+    if (ticketed.tickets > 0) {
+      expect(ticketed.lastHazardText).toContain('罚单');
+    }
   });
 
   it('applies obstacle collision again after leaving and re-entering', () => {

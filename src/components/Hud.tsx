@@ -3,9 +3,10 @@ import type { GameState } from '../game/gameState';
 
 type HudProps = {
   state: GameState;
+  cameraMode: 'first' | 'third';
 };
 
-export function Hud({ state }: HudProps) {
+export function Hud({ state, cameraMode }: HudProps) {
   const condition = getCakeCondition(state.cake);
   const tilt = Math.hypot(state.cake.tiltX, state.cake.tiltZ);
   const urgent = state.remainingSeconds < 18 || tilt > 0.72;
@@ -39,6 +40,20 @@ export function Hud({ state }: HudProps) {
         <div>
           <span>Score</span>
           <strong aria-label="Score readout">{Math.round(state.score)}</strong>
+        </div>
+        <div>
+          <span>Signal</span>
+          <strong aria-label="Traffic signal readout">
+            {state.trafficSignal.isRed ? 'RED' : 'GO'} {state.trafficSignal.secondsRemaining}s
+          </strong>
+        </div>
+        <div>
+          <span>Police</span>
+          <strong>{state.trafficSignal.policePresent ? 'WATCHING' : 'CLEAR'}</strong>
+        </div>
+        <div>
+          <span>View</span>
+          <strong>{cameraMode === 'first' ? 'HANDLEBAR' : 'CHASE'}</strong>
         </div>
         <div className="tilt-meter" aria-label={`Cake tilt ${Math.round(tilt * 100)} percent`}>
           <i style={{ width: `${Math.min(100, tilt * 100)}%` }} />

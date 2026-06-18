@@ -1,3 +1,4 @@
+import { Text } from '@react-three/drei';
 import { ROUTE_FEATURES, ROUTE_LENGTH } from '../game/route';
 import type { GameState } from '../game/gameState';
 
@@ -35,22 +36,37 @@ export function World({ state, onCustomerInteract }: WorldProps) {
         <meshStandardMaterial color="#2f3442" flatShading />
       </mesh>
 
-      {[78, 216, 304].map((z) => (
-        <group key={`crossroad-${z}`} position={[0, 0.035, z]}>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-            <planeGeometry args={[50, 15]} />
-            <meshStandardMaterial color="#303645" flatShading />
-          </mesh>
-          {[-10, -5, 5, 10].map((x) => (
-            <mesh key={x} position={[x, 0.08, 0]} castShadow>
-              <boxGeometry args={[3.2, 0.035, 0.22]} />
-              <meshStandardMaterial color="#f7e39a" flatShading />
+      {[78, 216, 304].map((z) => {
+        const signalStatus = state.trafficSignal.z === z ? state.trafficSignal : undefined;
+
+        return (
+          <group key={`crossroad-${z}`} position={[0, 0.035, z]}>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+              <planeGeometry args={[50, 15]} />
+              <meshStandardMaterial color="#303645" flatShading />
             </mesh>
-          ))}
-          <TrafficLight position={[-7.2, 0, -6]} active={state.remainingSeconds % 12 > 4} />
-          <TrafficLight position={[7.2, 0, 6]} active={state.remainingSeconds % 12 <= 4} />
-        </group>
-      ))}
+            {[-10, -5, 5, 10].map((x) => (
+              <mesh key={x} position={[x, 0.08, 0]} castShadow>
+                <boxGeometry args={[3.2, 0.035, 0.22]} />
+                <meshStandardMaterial color="#f7e39a" flatShading />
+              </mesh>
+            ))}
+            <TrafficLight
+              position={[-7.2, 0, -6]}
+              active={signalStatus?.isRed ?? false}
+              seconds={signalStatus?.secondsRemaining ?? 0}
+              policePresent={signalStatus?.policePresent ?? false}
+            />
+            <TrafficLight
+              position={[7.2, 0, 6]}
+              active={!(signalStatus?.isRed ?? true)}
+              seconds={signalStatus?.secondsRemaining ?? 0}
+              policePresent={false}
+            />
+            {signalStatus?.policePresent ? <Police position={[-5.1, 0, 5.6]} /> : null}
+          </group>
+        );
+      })}
 
       {[-7.5, 7.5].map((x) => (
         <mesh key={`curb-${x}`} position={[x, 0.08, ROUTE_LENGTH / 2]} castShadow>
@@ -264,7 +280,17 @@ export function World({ state, onCustomerInteract }: WorldProps) {
   );
 }
 
-function TrafficLight({ position, active }: { position: [number, number, number]; active: boolean }) {
+function TrafficLight({
+  position,
+  active,
+  seconds,
+  policePresent
+}: {
+  position: [number, number, number];
+  active: boolean;
+  seconds: number;
+  policePresent: boolean;
+}) {
   return (
     <group position={position}>
       <mesh position={[0, 1.6, 0]} castShadow>
@@ -282,6 +308,41 @@ function TrafficLight({ position, active }: { position: [number, number, number]
       <mesh position={[0, 2.86, -0.16]} castShadow>
         <cylinderGeometry args={[0.13, 0.13, 0.05, 8]} />
         <meshStandardMaterial color={active ? '#20472c' : '#42ff7a'} emissive={active ? '#000000' : '#42ff7a'} emissiveIntensity={0.5} flatShading />
+      </mesh>
+      <Text position={[0, 4.0, -0.18]} fontSize={0.34} color={active ? '#ff3045' : '#42ff7a'} anchorX="center" anchorY="middle">
+        {seconds > 0 ? `${seconds}` : ''}
+      </Text>
+      {policePresent ? (
+        <Text position={[0, 4.42, -0.18]} fontSize={0.18} color="#fff4bf" anchorX="center" anchorY="middle">
+          POLICE
+        </Text>
+      ) : null}
+    </group>
+  );
+}
+
+function Police({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 1.7, 0]} castShadow>
+        <icosahedronGeometry args={[0.28, 0]} />
+        <meshStandardMaterial color="#f0b48b" flatShading />
+      </mesh>
+      <mesh position={[0, 1.03, 0]} castShadow>
+        <boxGeometry args={[0.56, 0.88, 0.32]} />
+        <meshStandardMaterial color="#1b2c6b" flatShading />
+      </mesh>
+      <mesh position={[0, 2.04, 0]} castShadow>
+        <boxGeometry args={[0.72, 0.18, 0.38]} />
+        <meshStandardMaterial color="#151a27" flatShading />
+      </mesh>
+      <mesh position={[0.42, 1.32, -0.1]} rotation={[0.2, 0, -0.75]} castShadow>
+        <boxGeometry args={[0.14, 0.76, 0.14]} />
+        <meshStandardMaterial color="#f0b48b" flatShading />
+      </mesh>
+      <mesh position={[0.8, 1.18, -0.1]} rotation={[0, 0, -0.1]} castShadow>
+        <boxGeometry args={[0.42, 0.28, 0.06]} />
+        <meshStandardMaterial color="#fff4bf" flatShading />
       </mesh>
     </group>
   );

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { GameCanvas, type CameraMode } from './components/GameCanvas';
 import { Hud } from './components/Hud';
 import { ResultOverlay } from './components/ResultOverlay';
+import { SoundEngine } from './components/SoundEngine';
 import { completeDelivery, createGameState, updateGameState, type GameState } from './game/gameState';
 import type { VehicleInput } from './game/vehicle';
 
@@ -16,6 +17,11 @@ export default function App() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === ' ') {
         event.preventDefault();
+      }
+      if (event.key === 'CapsLock') {
+        event.preventDefault();
+        setCameraMode((current) => (current === 'first' ? 'third' : 'first'));
+        return;
       }
       if (event.key.toLowerCase() === 'r') {
         setState(createGameState());
@@ -70,16 +76,17 @@ export default function App() {
         cameraMode={cameraMode}
         onCustomerInteract={() => setState((current) => completeDelivery(current))}
       />
-      <Hud state={state} />
+      <Hud state={state} cameraMode={cameraMode} />
+      <SoundEngine state={state} />
       <button
         className="view-toggle"
         type="button"
         onClick={() => setCameraMode((current) => (current === 'first' ? 'third' : 'first'))}
       >
-        {cameraMode === 'first' ? '第三人称' : '第一人称'}
+        Caps Lock · {cameraMode === 'first' ? '车把视角' : '追车视角'}
       </button>
       <div className="control-hint">
-        W/↑ drive · Space boost · A/D dodge · R restart
+        W/↑ drive · Space boost · A/D dodge · Caps Lock view · R restart
       </div>
       <ResultOverlay state={state} onRestart={() => setState(createGameState())} />
     </main>

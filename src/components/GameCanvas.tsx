@@ -48,11 +48,11 @@ function FollowCamera({ state, cameraMode }: Pick<GameCanvasProps, 'state' | 'ca
 
     if (cameraMode === 'first') {
       camera.position.set(
-        position.x - forwardX * 0.55 + shakeX * 0.7,
-        1.18 + shakeY,
-        position.z - forwardZ * 0.88
+        position.x + forwardX * 1.45 + shakeX * 0.7,
+        2.08 + shakeY,
+        position.z + forwardZ * 1.08
       );
-      camera.lookAt(position.x + forwardX * 8.5, 0.52 + shakeY * 0.35, position.z + forwardZ * 8.5);
+      camera.lookAt(position.x + forwardX * 10.5, 0.86 + shakeY * 0.35, position.z + forwardZ * 10.5);
       return;
     }
 

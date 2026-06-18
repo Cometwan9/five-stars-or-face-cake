@@ -6,6 +6,18 @@ describe('rating', () => {
     expect(calculateRating({ remainingSeconds: 12, condition: 'perfect' }).stars).toBe(5);
   });
 
+  it('awards six stars for fast perfect shortcut delivery without tickets', () => {
+    const result = calculateRating({
+      remainingSeconds: 18,
+      condition: 'perfect',
+      shortcutsTaken: 1,
+      tickets: 0
+    });
+
+    expect(result.stars).toBe(6);
+    expect(result.title).toContain('六星');
+  });
+
   it('deducts for slight tilt', () => {
     expect(calculateRating({ remainingSeconds: 10, condition: 'slightTilt' }).stars).toBe(4);
   });

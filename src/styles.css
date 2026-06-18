@@ -65,9 +65,9 @@ p {
   top: 18px;
   left: 18px;
   display: grid;
-  grid-template-columns: repeat(5, minmax(82px, 1fr));
+  grid-template-columns: repeat(8, minmax(74px, 1fr));
   gap: 8px;
-  width: min(650px, calc(100vw - 36px));
+  width: min(920px, calc(100vw - 36px));
   color: #121625;
   font-family: "Trebuchet MS", Inter, ui-sans-serif, system-ui, sans-serif;
   text-transform: uppercase;
@@ -96,7 +96,7 @@ p {
   display: block;
   overflow: hidden;
   color: #e73138;
-  font-size: clamp(0.95rem, 2vw, 1.28rem);
+  font-size: clamp(0.78rem, 1.25vw, 1.02rem);
   text-shadow: 1px 1px 0 #fff4bf;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -211,7 +211,7 @@ p {
   position: absolute;
   right: 18px;
   bottom: 158px;
-  min-width: 104px;
+  min-width: 178px;
   padding: 8px 10px;
   border: 3px solid #121625;
   border-radius: 2px;

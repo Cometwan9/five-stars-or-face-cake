@@ -15,9 +15,13 @@ export function ResultOverlay({ state, onRestart }: ResultOverlayProps) {
 
   if (!state.rating) return null;
 
-  const stars = '★★★★★'.slice(0, state.rating.stars).padEnd(5, '☆');
+  const stars = state.rating.stars === 6
+    ? '★★★★★★'
+    : '★★★★★'.slice(0, state.rating.stars).padEnd(5, '☆');
   const outcome = state.rating.faceCake
     ? 'Face Cake'
+    : state.rating.stars === 6
+      ? 'Secret Route'
     : state.rating.stars <= 2
       ? 'Complaint Form'
       : 'Customer Review';
@@ -39,6 +43,8 @@ export function ResultOverlay({ state, onRestart }: ResultOverlayProps) {
         <p>{state.rating.comment}</p>
         <p>{timeText}</p>
         <p>蛋糕状态：{state.rating.conditionLabel}</p>
+        {state.tickets > 0 ? <p>罚单：{state.tickets} 张</p> : null}
+        {state.shortcutsTaken > 0 ? <p>近路：{state.shortcutsTaken} 次</p> : null}
       </article>
       <button ref={restartButtonRef} type="button" onClick={onRestart}>
         Try again

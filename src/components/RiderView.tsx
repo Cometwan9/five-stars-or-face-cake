@@ -48,12 +48,30 @@ function CakeCargo({ state }: RiderViewProps) {
     <group
       position={[
         cakeFlight * state.wind.direction * 0.55,
-        0.82 + cakeFlight * 0.92 + Math.sin(state.remainingSeconds * 14) * stress * 0.02,
-        1.06 + cakeFlight * 0.95
+        1.03 + cakeFlight * 0.92 + Math.sin(state.remainingSeconds * 14) * stress * 0.02,
+        1.26 + cakeFlight * 0.95
       ]}
       rotation={[cake.tiltZ * 1.2 + cakeFlight * 0.55, cakeFlight * state.wind.direction * 0.8, -cake.tiltX * 1.2]}
       scale={[0.56, 0.56, 0.56]}
     >
+      <group position={[0, -0.36, 0]}>
+        {[-0.48, 0.48].map((x) => (
+          <mesh key={`basket-side-${x}`} position={[x, 0.22, 0]} castShadow>
+            <boxGeometry args={[0.06, 0.42, 1.08]} />
+            <meshStandardMaterial color="#151a27" flatShading />
+          </mesh>
+        ))}
+        {[-0.52, 0.52].map((z) => (
+          <mesh key={`basket-front-${z}`} position={[0, 0.22, z]} castShadow>
+            <boxGeometry args={[1.02, 0.42, 0.06]} />
+            <meshStandardMaterial color="#151a27" flatShading />
+          </mesh>
+        ))}
+        <mesh position={[0, 0, 0]} castShadow>
+          <boxGeometry args={[1.06, 0.06, 1.12]} />
+          <meshStandardMaterial color="#292f3d" flatShading />
+        </mesh>
+      </group>
       <mesh position={[0, -0.16, 0]} scale={[collapsed ? 1.22 : 1, cakeSquash, collapsed ? 1.12 : 1]} castShadow>
         <cylinderGeometry args={[0.5, 0.52, 0.22, 10]} />
         <meshStandardMaterial color={collapsed ? '#d8b783' : '#f4dfb4'} flatShading />
@@ -150,10 +168,10 @@ function DeliveryScooterModel() {
     const scale = 1 / Math.max(size.x, size.y, size.z, 1);
 
     model.position.sub(center);
-    model.scale.setScalar(scale * 2.25);
+    model.scale.setScalar(scale * 2.85);
 
     return model;
   }, [albedoMap, metalnessMap, normalMap, obj, roughnessMap]);
 
-  return <primitive object={scooter} position={[0, 0.26, 0.38]} rotation={[0, Math.PI / 2, 0]} />;
+  return <primitive object={scooter} position={[0, 0.34, 0.3]} rotation={[0, Math.PI / 2, 0]} />;
 }
